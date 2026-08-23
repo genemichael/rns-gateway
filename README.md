@@ -100,6 +100,7 @@ What the firmware does to stay polite:
   airtime budget factor as everything else on your mesh.
 - **No periodic beacons.** Peer discovery (`RNSBIND`) is demand-driven with
   an hourly quiet heartbeat, matching the reference interface.
+- **No medium or larger attachments.** 
 
 **What this asks of your mesh**: an idle gateway pair is near-silent. A pair
 serving light messaging costs a few announce/message bursts per hour. The
