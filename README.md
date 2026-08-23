@@ -35,7 +35,7 @@ discovery instead of periodic push, per-destination rate limits, hard
 bandwidth caps) are the backbone of this implementation; where we deviate,
 it is documented in the source.
 
-Also load-bearing: [Reticulum](https://github.com/markqvist/Reticulum) by
+Also: [Reticulum](https://github.com/markqvist/Reticulum) by
 Mark Qvist, [microReticulum](https://github.com/torlando-tech/microReticulum)
 (the embedded RNS core), and the [MeshCore](https://github.com/meshcore-dev/MeshCore)
 project itself, whose README this file displaced —
