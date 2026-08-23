@@ -78,20 +78,20 @@ apart on the channel (0.5 s when direct). Concretely:
 |---|---|---|---|
 | Path request | ~70 B | 2 | ~5 s |
 | Announce | ~220 B | 4 | ~10 s |
-| Short LXMF text message | 300–500 B | 5–8 | 15–25 s |
+| Short LXMF text message | 300–500 B | 5-8 | 15-25 s |
 | Photo / large resource | 100 KB+ | 1,500+ | **the better part of an hour** |
 
 Text messaging over the tunnel is practical. Images and file transfer are
-technically possible and **socially inappropriate on a mesh you share** —
-they monopolize airtime for everyone within RF range, on any channel. If
-you need that, this is not the tool.
+technically possible and **socially inappropriate on a mesh you share**.
+They monopolize airtime for everyone within RF range, on any channel. Limit attachments 
+to 32kb or less.
 
 What the firmware does to stay polite:
 
-- **Announce throttle** — one rebroadcast per destination per 10 min
+- **Announce throttle**: one rebroadcast per destination per 10 min
   (default; portal-tunable). Keyed on the *actual destination*, so each
   device gets its path through once and repeats are suppressed.
-- **Path-request throttle** — one forwarded request per *queried*
+- **Path-request throttle**: one forwarded request per *queried*
   destination per 30 min (default; portal-tunable), with a 60 s burst window
   so a retry can survive a lost fragment. Demand-driven path responses
   bypass the announce throttle so recovery stays fast without staying loud.
@@ -102,7 +102,7 @@ What the firmware does to stay polite:
 - **No periodic beacons.** Peer discovery (`RNSBIND`) is demand-driven with
   an hourly quiet heartbeat, matching the reference interface.
 
-**What this asks of your mesh:** an idle gateway pair is near-silent. A pair
+**What this asks of your mesh**: an idle gateway pair is near-silent. A pair
 serving light messaging costs a few announce/message bursts per hour. The
 worst case is a cold start (both gateways rebooted, all paths forgotten —
 paths are deliberately RAM-only), which costs one path-request/announce
@@ -135,9 +135,9 @@ around your mesh and the tunnel will carry nothing.
 ## On AI-assisted development
 
 Parts of this codebase were written with AI assistance (Anthropic's Claude),
-under human direction and review. We're aware of the community's skepticism
-here, and we think the honest response is discipline you can verify rather
-than assurances:
+under human direction and review. The community's skepticism
+is warranted here, and we think the honest response is discipline 
+you can verify rather than assurances:
 
 - **The wire protocol is not AI-invented** — it's a port of a working,
   human-designed interface, kept wire-compatible, with the reference
@@ -150,6 +150,8 @@ than assurances:
 - **The fork discipline is machine-enforced** — CI fails if a single
   upstream MeshCore line is edited, so reviewing this project means
   reviewing `examples/rns_gateway/` and nothing else.
+  (This behavior needs some corrections as it is pointing to my own local
+  MeshCore folder)
 
 Review, criticism, and testing on other meshes are genuinely welcome.
 
