@@ -1,0 +1,88 @@
+# RNS gateway fork checks.
+#
+# A NEW workflow file — it does not modify any upstream workflow, so it carries
+# no rebase cost. Three gates, cheapest first:
+#
+#   1. Fork parity   — the diff against upstream must stay additive-only, or
+#                      upgrading MeshCore stops being a clean `git rebase`.
+#   2. Host codec    — golden tests for MeshCoreTunnelCodec, no hardware. These
+#                      are the only thing that catches a wire-format regression
+#                      after a dependency bump.
+#   3. Firmware      — the role actually compiles for the Heltec V4.
+name: RNS Gateway Checks
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'examples/rns_gateway/**'
+      - 'test/host/**'
+      - 'scripts/**'
+      - 'variants/heltec_v4/platformio.ini'
+      - '.github/workflows/rns-gateway-checks.yml'
+  pull_request:
+    paths:
+      - 'examples/rns_gateway/**'
+      - 'test/host/**'
+      - 'scripts/**'
+      - 'variants/heltec_v4/platformio.ini'
+
+jobs:
+  parity:
+    name: Fork parity (additive-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # need upstream history to diff against
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/meshcore-dev/MeshCore.git || true
+          git fetch --no-tags upstream main
+
+      - name: Check diff is additive-only
+        run: ./scripts/check_parity.sh upstream/main
+
+  host-tests:
+    name: Host codec tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run MeshCoreTunnelCodec golden tests
+        run: ./scripts/run_host_tests.sh
+
+  build:
+    name: Build heltec_v4_rns_gateway
+    runs-on: ubuntu-latest
+    needs: [host-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      # platformio.local.ini is gitignored (it holds WiFi credentials and the
+      # channel PSK), so CI supplies its own throwaway values. These never touch
+      # a radio — the job only needs the env to resolve and compile.
+      - name: Synthesise platformio.local.ini
+        run: |
+          cat > platformio.local.ini <<'EOF'
+          [env:heltec_v4_rns_gateway]
+          build_flags =
+            ${heltec_v4_rns_gateway_base.build_flags}
+            -D WIFI_SSID='"ci"'
+            -D WIFI_PWD='"ci-password"'
+            -D WIFI_AP_SSID='"RNSGatewayCI"'
+            -D WIFI_AP_PWD='"ci-password"'
+            -D WIFI_AP_CHANNEL=1
+            -D RNS_TCP_LISTEN_PORT=4242
+            -D TCP_IF_MAX_CLIENTS=4
+            -D BRIDGE_CHANNEL_NAME='"CI"'
+            -D BRIDGE_CHANNEL_PSK='"AAAAAAAAAAAAAAAAAAAAAA=="'
+          EOF
+
+      - name: Build
+        run: pio run -e heltec_v4_rns_gateway
