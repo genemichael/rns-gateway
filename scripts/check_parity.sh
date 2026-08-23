@@ -24,6 +24,13 @@ cd "$ROOT"
 # The one upstream file we are allowed to modify, and only additively.
 APPEND_ONLY_FILE="variants/heltec_v4/platformio.ini"
 
+# Prose exception: the standalone release repo (genemichael/rns-gateway) shows
+# the root README as the product's front page, so it is REPLACED, not appended.
+# README.md is documentation, not code — replacing it cannot conflict with an
+# upstream rebase in any way that matters (take ours, always). Code files never
+# get this exemption.
+REPLACE_OK_FILE="README.md"
+
 resolve_ref() {
   if [ -n "${1:-}" ]; then echo "$1"; return; fi
   if [ -n "${UPSTREAM_REF:-}" ]; then echo "$UPSTREAM_REF"; return; fi
@@ -65,6 +72,10 @@ while IFS=$'\t' read -r added deleted path; do
 
   if ! git cat-file -e "${REF}:${path}" 2>/dev/null; then
     continue          # brand-new file — always fine, this is an additive fork
+  fi
+
+  if [ "$path" = "$REPLACE_OK_FILE" ]; then
+    continue          # documentation front page — replacement is intentional
   fi
 
   if [ "$path" = "$APPEND_ONLY_FILE" ]; then

@@ -1,128 +1,169 @@
-## About MeshCore
+# RNS Gateway — Reticulum over MeshCore, on one device
 
-MeshCore is a lightweight, portable C++ library that enables multi-hop packet routing for embedded projects using LoRa and other packet radios. It is designed for developers who want to create resilient, decentralized communication networks that work without the internet.
+A [Reticulum](https://reticulum.network/) gateway that runs *inside* MeshCore
+firmware on a single Heltec WiFi LoRa 32 V4: MeshCore owns the SX1262 radio,
+an embedded [microReticulum](https://github.com/torlando-tech/microReticulum)
+transport runs alongside it, and Reticulum clients (MeshChat, Sideband,
+Columba, …) connect over WiFi to a TCP server on the device. The MeshCore
+mesh is the long-haul transport between sites.
 
-## 🔍 What is MeshCore?
-
-MeshCore now supports a range of LoRa devices, allowing for easy flashing without the need to compile firmware manually. Users can flash a pre-built binary using tools like Adafruit ESPTool and interact with the network through a serial console.
-MeshCore provides the ability to create wireless mesh networks, similar to Meshtastic and Reticulum but with a focus on lightweight multi-hop packet routing for embedded projects. Unlike Meshtastic, which is tailored for casual LoRa communication, or Reticulum, which offers advanced networking, MeshCore balances simplicity with scalability, making it ideal for custom embedded solutions, where devices (nodes) can communicate over long distances by relaying messages through intermediate nodes. This is especially useful in off-grid, emergency, or tactical situations where traditional communication infrastructure is unavailable.
-
-## ⚡ Key Features
-
-* Multi-Hop Packet Routing
-  * Devices can forward messages across multiple nodes, extending range beyond a single radio's reach.
-  * Supports up to a configurable number of hops to balance network efficiency and prevent excessive traffic.
-  * Nodes use fixed roles where "Companion" nodes are not repeating messages at all to prevent adverse routing paths from being used.
-* Supports LoRa Radios – Works with Heltec, RAK Wireless, and other LoRa-based hardware.
-* Decentralized & Resilient – No central server or internet required; the network is self-healing.
-* Low Power Consumption – Ideal for battery-powered or solar-powered devices.
-* Simple to Deploy – Pre-built example applications make it easy to get started.
-
-## 🎯 What Can You Use MeshCore For?
-
-* Off-Grid Communication: Stay connected even in remote areas.
-* Emergency Response & Disaster Recovery: Set up instant networks where infrastructure is down.
-* Outdoor Activities: Hiking, camping, and adventure racing communication.
-* Tactical & Security Applications: Military, law enforcement, and private security use cases.
-* IoT & Sensor Networks: Collect data from remote sensors and relay it back to a central location.
-
-## 🚀 How to Get Started
-
-- Watch the [MeshCore QuickStart Playlist](https://www.youtube.com/watch?v=iaFltojJrAc&list=PLshzThxhw4O4WU_iZo3NmNZOv6KMrUuF9) by The Comms Channel
-- Watch the [MeshCore Technical Presentation](https://www.youtube.com/watch?v=OwmkVkZQTf4) by Liam Cottle.
-- Read through our [Frequently Asked Questions](./docs/faq.md) and [Documentation](https://docs.meshcore.io).
-- Flash the MeshCore firmware on a supported device.
-- Connect with a supported client.
-
-For developers:
-
-- Install [PlatformIO](https://docs.platformio.org) in [Visual Studio Code](https://code.visualstudio.com).
-- Clone and open the MeshCore repository in Visual Studio Code.
-- See the example applications you can modify and run:
-  - [Companion Radio](./examples/companion_radio) - For use with an external chat app, over BLE, USB or Wi-Fi.
-  - [KISS Modem](./examples/kiss_modem) - Serial KISS protocol bridge for host applications. ([protocol docs](./docs/kiss_modem_protocol.md))
-  - [Simple Repeater](./examples/simple_repeater) - Extends network coverage by relaying messages.
-  - [Simple Room Server](./examples/simple_room_server) - A simple BBS server for shared Posts.
-  - [Simple Secure Chat](./examples/simple_secure_chat) - Secure terminal based text communication between devices.
-  - [Simple Sensor](./examples/simple_sensor) - Remote sensor node with telemetry and alerting.
-
-The Simple Secure Chat example can be interacted with through the Serial Monitor in Visual Studio Code, or with a Serial USB Terminal on Android.
-
-## ⚡️ MeshCore Flasher
-
-We have prebuilt firmware ready to flash on supported devices.
-
-- Launch https://meshcore.io/flasher
-- Select a supported device
-- Flash one of the firmware types:
-  - Companion, Repeater or Room Server
-- Once flashing is complete, you can connect with one of the MeshCore clients below.
-
-## 📱 MeshCore Clients
-
-**Companion Firmware**
-
-The companion firmware can be connected to via BLE, USB or Wi-Fi depending on the firmware type you flashed.
-
-- Web: https://app.meshcore.nz
-- Android: https://play.google.com/store/apps/details?id=com.liamcottle.meshcore.android
-- iOS: https://apps.apple.com/us/app/meshcore/id6742354151?platform=iphone
-- NodeJS: https://github.com/liamcottle/meshcore.js
-- Python: https://github.com/fdlamotte/meshcore-cli
-
-**Repeater and Room Server Firmware**
-
-The repeater and room server firmware can be set up via USB in the web config tool.
-
-- https://config.meshcore.io
-
-They can also be managed via LoRa in the mobile app by using the Remote Management feature.
-
-## 🛠 Hardware Compatibility
-
-MeshCore is designed for devices listed in the [MeshCore Flasher](https://meshcore.io/flasher)
-
-## 📜 License
-
-MeshCore is open-source software released under the MIT License. You are free to use, modify, and distribute it for personal and commercial projects.
-
-## Contributing
-
-Please submit PR's using 'dev' as the base branch!
-For minor changes just submit your PR and we'll try to review it, but for anything more 'impactful' please open an Issue first and start a discussion. It is better to sound out what it is you want to achieve first, and try to come to a consensus on what the best approach is, especially when it impacts the structure or architecture of this codebase.
-
-Here are some general principles you should try to adhere to:
-* Keep it simple. Please, don't think like a high-level lang programmer. Think embedded, and keep code concise, without any unnecessary layers.
-* No dynamic memory allocation, except during setup/begin functions.
-* Use the same brace and indenting style that's in the core source modules. (A .clang-format is probably going to be added soon, but please do NOT retroactively re-format existing code. This just creates unnecessary diffs that make finding problems harder)
-
-Help us prioritize! Please react with thumbs-up to issues/PRs you care about most. We look at reaction counts when planning work.
-
-### Running unit tests
-
-To run unit tests, run the following command:
-
-```bash
-pio test --environment native --verbose
+```
+ RNS client apps ──WiFi/TCP:4242──► [ Heltec V4 ]                 [ Heltec V4 ] ◄──WiFi/TCP──  RNS client apps
+ (MeshChat, Sideband,               RNS transport ◄─LoRa/MeshCore─► RNS transport
+  Columba, rnsd ...)                + MeshCore node    channel      + MeshCore node
 ```
 
-## Road-Map / To-Do
+This repository is a fork of [MeshCore](https://github.com/meshcore-dev/MeshCore).
+Everything gateway-related is **additive**: new directories plus one appended
+block in the variant build file, enforced by a CI gate
+(`scripts/check_parity.sh`) that fails if any upstream file is edited. The
+gateway role lives in [`examples/rns_gateway/`](examples/rns_gateway/) — that
+directory (plus `lib/microreticulum-shim/`, `test/host/`, `scripts/`) is the
+entire footprint of this project.
 
-There are a number of fairly major features in the pipeline, with no particular time-frames attached yet. In very rough chronological order:
-- [X] Companion radio: UI redesign
-- [X] Repeater + Room Server: add ACL's (like Sensor Node has)
-- [X] Standardise Bridge mode for repeaters
-- [ ] Repeater/Bridge: Standardise the Transport Codes for zoning/filtering
-- [X] Core + Repeater: enhanced zero-hop neighbour discovery
-- [ ] Core: round-trip manual path support
-- [ ] Companion + Apps: support for multiple sub-meshes (and 'off-grid' client repeat mode)
-- [ ] Core + Apps: support for LZW message compression
-- [ ] Core: dynamic CR (Coding Rate) for weak vs strong hops
-- [ ] Core: new framework for hosting multiple virtual nodes on one physical device
-- [ ] V2 protocol spec: discussion and consensus around V2 packet protocol, including path hashes, new encryption specs, etc
+## Lineage and credit
 
-## 📞 Get Support
+The tunnel design is **not original to this project**. It is a C++ port of
+[`MeshCore_Dynamic_Interface.py`](https://github.com/comms-engineer/RNS_Over_Meshcore)
+by comms-engineer — the hybrid channel-broadcast / unicast-direct RNS
+interface for MeshCore — and is **wire-format identical** to it, including
+the fragment framing, the `RNSBIND` demand-driven peer discovery, and the
+direct-with-channel-fallback routing strategy. A gateway running this
+firmware interoperates with a Python node running that interface. The
+original author's design decisions around airtime discipline (demand-driven
+discovery instead of periodic push, per-destination rate limits, hard
+bandwidth caps) are the backbone of this implementation; where we deviate,
+it is documented in the source.
 
-- Report bugs and request features on the [GitHub Issues](https://github.com/ripplebiz/MeshCore/issues) page.
-- Find additional guides and components on [my site](https://buymeacoffee.com/ripplebiz).
-- Join [MeshCore Discord](https://meshcore.gg) to chat with the developers and get help from the community.
+Also load-bearing: [Reticulum](https://github.com/markqvist/Reticulum) by
+Mark Qvist, [microReticulum](https://github.com/torlando-tech/microReticulum)
+(the embedded RNS core), and the [MeshCore](https://github.com/meshcore-dev/MeshCore)
+project itself, whose README this file displaced —
+[read it upstream](https://github.com/meshcore-dev/MeshCore#readme).
+
+## How it actually works
+
+**What MeshCore sees.** The tunnel rides on a **private MeshCore group
+channel** (index 1–7; the public channel cannot take a private PSK and is
+never used). Each RNS packet is split into fragments and sent as ordinary
+channel text messages of the form `RNS:<base64url(header+payload)>` — to the
+rest of the mesh this is opaque, PSK-encrypted channel traffic on a channel
+nobody else has joined. The gateway does **not** read, bridge, or translate
+MeshCore users' messages; MeshCore chat and RNS traffic pass through the
+same radios without touching each other.
+
+**Routing.** Broadcast traffic (announces, path requests) goes on the
+channel. Everything else is upgraded to MeshCore **direct messages** —
+routed unicast, end-to-end acknowledged — as soon as peer gateways discover
+each other via `RNSBIND`, with automatic fallback to the channel when a
+direct send goes unacknowledged. Direct routing exists specifically to keep
+point-to-point traffic from being flooded mesh-wide.
+
+**Interface modes.** The mesh-facing RNS interface runs `MODE_BOUNDARY`; the
+client-facing TCP interface runs `MODE_GATEWAY`. The original interface's
+README warns: never use gateway mode **on a LoRa interface** attached to a
+high-connectivity backbone — that floods the channel with routes. This
+firmware follows that rule: gateway-mode duties (answering and propagating
+clients' path requests) face the WiFi side only, and everything those duties
+put on the air passes through the per-destination throttles below.
+
+## Network strain — honest numbers
+
+A LoRa channel is a shared, half-duplex resource. At the default radio
+settings (US 910.525 MHz, 62.5 kHz BW, SF7, CR5) the tunnel budgets roughly
+**300 bit/s** of useful throughput, moved in ≤64-byte fragments paced 2.5 s
+apart on the channel (0.5 s when direct). Concretely:
+
+| Traffic | Size | Fragments | Tunnel occupancy |
+|---|---|---|---|
+| Path request | ~70 B | 2 | ~5 s |
+| Announce | ~220 B | 4 | ~10 s |
+| Short LXMF text message | 300–500 B | 5–8 | 15–25 s |
+| Photo / large resource | 100 KB+ | 1,500+ | **the better part of an hour** |
+
+Text messaging over the tunnel is practical. Images and file transfer are
+technically possible and **socially inappropriate on a mesh you share** —
+they monopolize airtime for everyone within RF range, on any channel. If
+you need that, this is not the tool.
+
+What the firmware does to stay polite:
+
+- **Announce throttle** — one rebroadcast per destination per 10 min
+  (default; portal-tunable). Keyed on the *actual destination*, so each
+  device gets its path through once and repeats are suppressed.
+- **Path-request throttle** — one forwarded request per *queried*
+  destination per 30 min (default; portal-tunable), with a 60 s burst window
+  so a retry can survive a lost fragment. Demand-driven path responses
+  bypass the announce throttle so recovery stays fast without staying loud.
+- **RNS announce bandwidth cap** on the mesh interface, on top of ours.
+- **Duplicate suppression** and **flood scoping** inherit from MeshCore
+  itself — the gateway is a standard MeshCore node and obeys the same
+  airtime budget factor as everything else on your mesh.
+- **No periodic beacons.** Peer discovery (`RNSBIND`) is demand-driven with
+  an hourly quiet heartbeat, matching the reference interface.
+
+**What this asks of your mesh:** an idle gateway pair is near-silent. A pair
+serving light messaging costs a few announce/message bursts per hour. The
+worst case is a cold start (both gateways rebooted, all paths forgotten —
+paths are deliberately RAM-only), which costs one path-request/announce
+exchange per active destination, throttled as above.
+
+## Getting started
+
+Prebuilt images are on the [releases page](../../releases) — **Stationary**
+(site gateway) and **Mobile** (AP-only, travels; currently a preview). Flash
+at offset 0 with esptool, then:
+
+1. Join the device's WiFi AP (`RNSGateway-Stationary`, password
+   `rnsgateway`) and open the portal at `http://192.168.4.1/` (user `admin`,
+   password `password`).
+2. **Change both passwords** (AP and portal — both fields are in the portal).
+3. Create your **own private channel** in the MeshCore app, and paste its
+   name and PSK into the portal. No channel ships in the firmware, and the
+   device bridges nothing until you do this. Use a channel dedicated to the
+   tunnel — don't ride a channel humans chat on.
+4. Set the LoRa parameters to match your mesh **exactly** (silent failure
+   otherwise — the node simply hears nothing).
+5. Point your Reticulum client at the device: `rnsgateway-stationary.local`
+   port `4242` (TCP), up to 4 clients.
+
+Repeat on a second gateway at the far site, same channel and radio
+parameters. Two sites, one shared rnsd, is a mistake worth avoiding: if both
+gateways also peer with a common internet transport, Reticulum will route
+around your mesh and the tunnel will carry nothing.
+
+## On AI-assisted development
+
+Parts of this codebase were written with AI assistance (Anthropic's Claude),
+under human direction and review. We're aware of the community's skepticism
+here, and we think the honest response is discipline you can verify rather
+than assurances:
+
+- **The wire protocol is not AI-invented** — it's a port of a working,
+  human-designed interface, kept wire-compatible, with the reference
+  implementation's golden tests ported alongside it (`test/host/`, runnable
+  on any desktop with `scripts/run_host_tests.sh`, no hardware needed).
+- **Every routing and throttle behavior was validated on real hardware**,
+  several of them the hard way — the git history and source comments record
+  the actual on-air failures that drove each fix, including two mis-keyed
+  rate limiters found by watching a live channel misbehave.
+- **The fork discipline is machine-enforced** — CI fails if a single
+  upstream MeshCore line is edited, so reviewing this project means
+  reviewing `examples/rns_gateway/` and nothing else.
+
+Review, criticism, and testing on other meshes are genuinely welcome.
+
+## Roadmap
+
+- Validation of the **Mobile** variant (then it leaves preview).
+- **Propagation-node sync tunnels**: build variants (in-tree now, unreleased)
+  that restrict the tunnel to whitelisted LXMF propagation-node
+  destinations — a dedicated, policy-enforced sync link instead of a
+  general-purpose tunnel.
+- 802.11ah (HaLow) client access.
+
+## License
+
+Gateway code (`examples/rns_gateway/`, `test/host/`, `scripts/`) is MIT
+(SPDX headers in each file). MeshCore and all upstream components retain
+their own licenses.
