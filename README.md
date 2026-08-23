@@ -17,7 +17,7 @@ This repository is a fork of [MeshCore](https://github.com/meshcore-dev/MeshCore
 Everything gateway-related is **additive**: new directories plus one appended
 block in the variant build file, enforced by a CI gate
 (`scripts/check_parity.sh`) that fails if any upstream file is edited. The
-gateway role lives in [`examples/rns_gateway/`](examples/rns_gateway/) — that
+gateway role lives in [`examples/rns_gateway/`](examples/rns_gateway/). That
 directory (plus `lib/microreticulum-shim/`, `test/host/`, `scripts/`) is the
 entire footprint of this project.
 
@@ -44,8 +44,7 @@ project itself, whose README this file displaced —
 ## How it actually works
 
 **What MeshCore sees.** The tunnel rides on a **private MeshCore group
-channel** (index 1–7; the public channel cannot take a private PSK and is
-never used). Each RNS packet is split into fragments and sent as ordinary
+channel**. Each RNS packet is split into fragments and sent as ordinary
 channel text messages of the form `RNS:<base64url(header+payload)>` — to the
 rest of the mesh this is opaque, PSK-encrypted channel traffic on a channel
 nobody else has joined. The gateway does **not** read, bridge, or translate
@@ -84,7 +83,7 @@ apart on the channel (0.5 s when direct). Concretely:
 Text messaging over the tunnel is practical. Images and file transfer are
 technically possible and **socially inappropriate on a mesh you share**.
 They monopolize airtime for everyone within RF range, on any channel. Limit attachments 
-to 32kb or less.
+to 32kb or less. No LXST over MeshCore.
 
 What the firmware does to stay polite:
 
