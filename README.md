@@ -83,7 +83,7 @@ apart on the channel (0.5 s when direct). Concretely:
 Text messaging over the tunnel is practical. Images and file transfer are
 technically possible and **socially inappropriate on a mesh you share**.
 They monopolize airtime for everyone within RF range, on any channel. Limit attachments 
-to 32kb or less and only for direct connections. No LXST over MeshCore.
+to 32kb or less and only for IP connections. No LXST over MeshCore.
 
 What the firmware does to stay polite:
 
@@ -100,7 +100,7 @@ What the firmware does to stay polite:
   airtime budget factor as everything else on your mesh.
 - **No periodic beacons.** Peer discovery (`RNSBIND`) is demand-driven with
   an hourly quiet heartbeat, matching the reference interface.
-- **No medium or larger attachments,** and only for direct connections.
+- **No medium or larger attachments,** and only for IP connections.
 
 **What this asks of your mesh**: an idle gateway pair is near-silent. A pair
 serving light messaging costs a few announce/message bursts per hour. The
