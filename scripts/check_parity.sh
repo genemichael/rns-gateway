@@ -34,9 +34,14 @@ REPLACE_OK_FILE="README.md"
 resolve_ref() {
   if [ -n "${1:-}" ]; then echo "$1"; return; fi
   if [ -n "${UPSTREAM_REF:-}" ]; then echo "$UPSTREAM_REF"; return; fi
+  # Compare against the MERGE-BASE with upstream, not upstream's tip: the
+  # additive-only promise is about the commit we forked FROM. Diffing against
+  # a moved tip makes upstream's own new edits read as our violations (bitten
+  # 2026-08-24 when upstream merged a docs/faq.md fix). Rebasing onto a newer
+  # upstream advances the merge-base and re-tightens the gate automatically.
   for candidate in upstream/main origin/main; do
     if git rev-parse --verify --quiet "$candidate" >/dev/null; then
-      echo "$candidate"; return
+      git merge-base HEAD "$candidate"; return
     fi
   done
   echo "ERROR: no upstream ref found. Add an 'upstream' remote, or pass one:" >&2
