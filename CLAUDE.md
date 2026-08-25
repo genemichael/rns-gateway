@@ -23,7 +23,8 @@ This is the MeshCore fork hosting the RNS gateway role. All work happens in
 - Board B (AP-only):      `pio run -e heltec_v4_rns_gateway_b -t upload`
 - Prop-restricted variants (same firmware + `RNS_GW_PROP_ONLY`, which forces
   the PropPolicy outbound gate on): `heltec_v4_rns_gateway_prop` /
-  `heltec_v4_rns_gateway_b_prop`. Envs live in `platformio.local.ini`.
+  `heltec_v4_rns_gateway_b_prop` in `platformio.local.ini`, plus tracked
+  release envs `heltec_v4_rns_gateway_stationary_prop` / `_mobile_prop`.
   Whitelist is the portal's "Prop destination hashes" field.
 - Release variants (tracked, no secrets, boot AP-first for portal config):
   `heltec_v4_rns_gateway_stationary` / `heltec_v4_rns_gateway_mobile`.
