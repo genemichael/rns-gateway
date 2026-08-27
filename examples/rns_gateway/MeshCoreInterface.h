@@ -106,6 +106,22 @@ public:
     uint32_t    bind_rx()        const { return _bind_rx; }
     uint32_t    prop_dropped()   const { return _prop_dropped; }
 
+    // Peer table row for the status screen. Returns false when idx is past
+    // the end. Call from the RNS task only (same owner as the maps).
+    bool peer_info(size_t idx, char* name, size_t name_len,
+                   bool& can_route, uint32_t& last_seen_ms) const {
+        auto it = _peer_table.begin();
+        for (size_t i = 0; i < idx && it != _peer_table.end(); ++i) ++it;
+        if (it == _peer_table.end()) return false;
+        strncpy(name, it->first.c_str(), name_len - 1);
+        name[name_len - 1] = 0;
+        auto cit = _peer_caps.find(it->first);
+        can_route = (cit != _peer_caps.end()) ? cit->second : true;
+        auto lit = _peer_last_seen.find(it->first);
+        last_seen_ms = (lit != _peer_last_seen.end()) ? lit->second : 0;
+        return true;
+    }
+
     // Whitelist a prop destination hash (2*RNS_DST_LEN hex chars). Call before
     // start(); returns false on malformed input. Only consulted when
     // Config::prop_only is set.

@@ -36,6 +36,9 @@
 
 #include <Mesh.h>
 #include "MyMesh.h"
+#ifdef DISPLAY_CLASS
+  #include "StatusScreen.h"
+#endif
 
 // ── Client access ────────────────────────────────────────────────────────────
 // Port clients dial. 4242 is the Reticulum TCPServerInterface convention.
@@ -85,6 +88,10 @@ static volatile bool       _sta_up = false;   // station associated
 static volatile bool       _ap_up  = false;   // softAP raised
 
 static GatewayConfig g_cfg;
+#ifdef DISPLAY_CLASS
+static bool g_screen_ok = false;
+static StatusScreen g_screen(display, user_btn, g_cfg);
+#endif
 static ConfigPortal  g_portal;
 
 // ── Radio parameters across the task boundary ────────────────────────────────
@@ -344,8 +351,18 @@ static void rns_task(void* arg) {
   _reticulum->transport_enabled(true);
   _reticulum->start();
 
+#ifdef DISPLAY_CLASS
+  if (g_screen_ok) {
+    g_screen.begin(_mc_impl, _tcp_impl, &board, the_mesh.getNodePrefs());
+  }
+#endif
+
   while (true) {
     service_wifi(last_retry);
+
+#ifdef DISPLAY_CLASS
+    g_screen.loop();
+#endif
 
     if (!portal_started && net_up()) {
       g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio);
@@ -467,6 +484,19 @@ void setup() {
   sensors.begin();
 
   the_mesh.begin(fs);
+
+#ifdef DISPLAY_CLASS
+  // Probe fails harmlessly on boards with no OLED fitted; the screen (and
+  // the PRG button driver) then stay dormant for the whole run. Serviced
+  // from the RNS task, which owns every data source the pages read.
+  if (display.begin()) {
+    user_btn.begin();
+    g_screen_ok = true;
+    slogln("[oled] display up");
+  } else {
+    slogln("[oled] no display found");
+  }
+#endif
 
   if (xTaskCreatePinnedToCore(rns_task_guarded, "rns", RNS_TASK_STACK, NULL,
                               RNS_TASK_PRIORITY, NULL, RNS_TASK_CORE) != pdPASS) {
