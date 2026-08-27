@@ -18,22 +18,22 @@ plan is load-bearing:
 | System | Frequency | Notes |
 |---|---|---|
 | MeshCore LoRa (tunnel) | 910.525 MHz | 62.5 kHz BW, SF7 |
-| RNS LoRa (RNode) | 914.900 MHz | |
+| RNS LoRa (RNode) | 914.900 MHz | 125 kHz BW, SF7 |
 | HaLow (HD-01) | 902.5 MHz | 1 MHz channel — verify the configured channel **and width** on the units |
 
 Rules:
 
-- **Lock the HaLow channel.** Never leave auto-channel on — a unit that
+- **Lock the HaLow channel.** Never leave auto-channel on. A unit that
   hops onto ~910 or ~915 will flatten a LoRa system, and the LoRa side
   fails *silently* (nodes just go deaf).
 - HaLow channels are 1–8 MHz wide. At 902.5 with a 1 MHz width the top
-  edge sits near 903 MHz — comfortable clearance below 910.525. A wider
-  width setting (2/4/8 MHz) grows toward the LoRa frequencies; if you need
-  more HaLow throughput, grow **downward** in the band, not up.
+  edge sits near 903 MHz. This is a comfortable clearance below 910.525. 
+  A wider width setting (2/4/8 MHz) grows toward the LoRa frequencies; 
+  if you need more HaLow throughput, grow **downward** in the band, not up.
 - Separate antennas physically at any site that hosts more than one of
   these systems. Near-field overload desensitizes receivers regardless of
-  channel spacing — different masts or building corners, not adjacent
-  ports on one bracket.
+  channel spacing (different masts or building corners, not adjacent
+  ports on one bracket).
 - **Coexistence proof**: after setup, run a MeshCore tunnel test while
   pushing sustained traffic through the HaLow link. Five minutes; do it
   once per site build-out.
