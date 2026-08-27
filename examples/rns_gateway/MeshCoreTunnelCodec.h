@@ -127,6 +127,14 @@ bool parse_bind(const std::string& text, BindMsg& out);
 // address. Returns false if the packet is too short. Mirrors _extract_rns_token.
 bool extract_rns_token(const uint8_t* data, size_t len, uint8_t out[RNS_DST_LEN]);
 
+// Build the SHA-256 preimage of an RNS packet's hash — [data[0] & 0x0F] +
+// (bytes after the first address for two-byte headers, else after the fixed
+// header). Truncated to RNS_DST_LEN, this is the address a delivery PROOF for
+// the packet carries, so a transport that pre-binds it can route the proof
+// unicast instead of broadcasting it. Same preimage rule as link_id_preimage
+// (a link_id IS the packet hash of the LINK_REQUEST), without the type gate.
+bool packet_hash_preimage(const uint8_t* data, size_t len, std::vector<uint8_t>& out);
+
 // Build the SHA-256 preimage for a LINK_REQUEST link_id:
 //   [ data[0] & 0x0F ] + (bytes after the destination address(es))
 // Caller hashes it (SHA-256) and takes the first 16 bytes. Returns false if the

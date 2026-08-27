@@ -271,6 +271,12 @@ private:
                _cfg->path_req_rate_s, 0, 86400);
         number("ann_rate", "Announce throttle, seconds per destination (0 = off)",
                _cfg->announce_rate_s, 0, 86400);
+        checkbox("tun_flood", "Route tunnel via mesh repeaters (flood)", _cfg->tunnel_flood);
+        _server.sendContent(F("<p class='note'>Leave OFF when the peer gateway is "
+                              "in direct radio range — flood routing makes every "
+                              "repeater in the region retransmit tunnel traffic.</p>"));
+        number("air_kb", "Airtime budget, KB per hour (0 = unlimited)",
+               _cfg->air_budget_kb_h, 0, 200);
         text("prop_dests", "Prop destination hashes (32 hex chars, comma-separated)",
              _cfg->prop_dests, 139, false);
         _server.sendContent(F("<p class='note'>Prop destinations are only enforced "
@@ -319,6 +325,7 @@ private:
         c.ap_enabled   = _server.hasArg("ap_en");
         c.tcp_enabled  = _server.hasArg("tcp_en");
         c.mdns_enabled = _server.hasArg("mdns_en");
+        c.tunnel_flood = _server.hasArg("tun_flood");
 
         copyArg("sta_ssid",  c.sta_ssid,  sizeof(c.sta_ssid));
         copyArg("sta_pwd",   c.sta_pwd,   sizeof(c.sta_pwd));
@@ -336,6 +343,10 @@ private:
         if (_server.hasArg("ann_rate")) {
             long v = _server.arg("ann_rate").toInt();
             if (v >= 0 && v <= 86400) c.announce_rate_s = (uint32_t)v;
+        }
+        if (_server.hasArg("air_kb")) {
+            long v = _server.arg("air_kb").toInt();
+            if (v >= 0 && v <= 200) c.air_budget_kb_h = (uint32_t)v;
         }
         // Blank means keep — an empty password would silently fall back to the
         // build default, which is worse than whatever the user had.

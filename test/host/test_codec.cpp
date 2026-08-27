@@ -273,6 +273,35 @@ static void test_extract_path_request_target() {
           "runt path-request rejected");
 }
 
+static void test_packet_hash_preimage() {
+    // For a LINK_REQ the packet-hash preimage IS the link_id preimage.
+    uint8_t lr[40];
+    std::memset(lr, 0x5A, sizeof(lr));
+    lr[0] = 0x02;   // LINK_REQ, single header
+    std::vector<uint8_t> a, b;
+    CHECK(MeshCoreTunnel::packet_hash_preimage(lr, sizeof(lr), a), "generic parses LR");
+    CHECK(MeshCoreTunnel::link_id_preimage(lr, sizeof(lr), b), "link parses LR");
+    CHECK(a == b, "identical preimage for LINK_REQ");
+
+    // DATA packets parse with the generic form (the proof-prebind case)...
+    uint8_t d[40];
+    std::memset(d, 0x33, sizeof(d));
+    d[0] = 0x00;    // DATA + SINGLE
+    CHECK(MeshCoreTunnel::packet_hash_preimage(d, sizeof(d), a), "generic parses DATA");
+    CHECK(a.size() == 1 + (sizeof(d) - 2), "single-header skips flags+hops only");
+    CHECK(a[0] == (d[0] & 0x0F), "masked flags first");
+    // ...but the LINK_REQ-only form still rejects them.
+    CHECK(!MeshCoreTunnel::link_id_preimage(d, sizeof(d), b), "link form rejects DATA");
+
+    // Two-byte header: the first (transport) address is excluded — it changes
+    // per hop and must not affect the hash.
+    uint8_t d2[60];
+    std::memset(d2, 0x44, sizeof(d2));
+    d2[0] = 0x40;   // DATA + SINGLE + two-byte header
+    CHECK(MeshCoreTunnel::packet_hash_preimage(d2, sizeof(d2), a), "two-byte parses");
+    CHECK(a.size() == 1 + (sizeof(d2) - 18), "two-byte skips first address");
+}
+
 int main() {
     test_b64url_roundtrip();
     test_b64url_known_vector();
@@ -287,6 +316,7 @@ int main() {
     test_link_id_preimage();
     test_is_broadcast();
     test_extract_path_request_target();
+    test_packet_hash_preimage();
 
     if (g_fail) {
         std::fprintf(stderr, "\n%d failure(s)\n", g_fail);

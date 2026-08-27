@@ -98,6 +98,13 @@ struct GatewayConfig {
     // Whitelisted prop destination hashes: comma-separated 32-hex-char tokens,
     // up to 4. Only enforced by the *_prop build variants; harmless elsewhere.
     char     prop_dests[140];
+    // false (default): zero-hop — mesh repeaters do NOT re-flood tunnel
+    // traffic. Correct whenever the peer gateway is in direct RF range.
+    // true: flood-route through repeaters (regional airtime cost — opt-in).
+    bool     tunnel_flood;
+    // Aggregate tunnel airtime budget, KB per rolling hour (0 = unlimited).
+    // Sheds announces/path-requests above 80%, everything at 100%.
+    uint32_t air_budget_kb_h;
 
     // ── MeshCore bridge channel ─────────────────────────────────────────────
     // Index 0 is MeshCore public and takes no private PSK; a private tunnel
@@ -128,6 +135,8 @@ struct GatewayConfig {
         path_req_rate_s = 1800;
         announce_rate_s = 600;
         prop_dests[0]   = 0;
+        tunnel_flood    = false;
+        air_budget_kb_h = 60;   // ~45% of the theoretical 300 bit/s hour
 
         strlcpy(chan_name, BRIDGE_CHANNEL_NAME, sizeof(chan_name));
         strlcpy(chan_psk,  BRIDGE_CHANNEL_PSK,  sizeof(chan_psk));
@@ -180,6 +189,8 @@ struct GatewayConfig {
         path_req_rate_s = doc["path_req_rate_s"] | path_req_rate_s;
         announce_rate_s = doc["announce_rate_s"] | announce_rate_s;
         strlcpy(prop_dests, doc["prop_dests"] | prop_dests, sizeof(prop_dests));
+        tunnel_flood    = doc["tunnel_flood"]    | tunnel_flood;
+        air_budget_kb_h = doc["air_budget_kb_h"] | air_budget_kb_h;
 
         strlcpy(chan_name, doc["chan_name"] | chan_name, sizeof(chan_name));
         strlcpy(chan_psk,  doc["chan_psk"]  | chan_psk,  sizeof(chan_psk));
@@ -205,6 +216,8 @@ struct GatewayConfig {
         doc["path_req_rate_s"] = path_req_rate_s;
         doc["announce_rate_s"] = announce_rate_s;
         doc["prop_dests"]   = prop_dests;
+        doc["tunnel_flood"] = tunnel_flood;
+        doc["air_budget_kb_h"] = air_budget_kb_h;
         doc["chan_name"]    = chan_name;
         doc["chan_psk"]     = chan_psk;
 

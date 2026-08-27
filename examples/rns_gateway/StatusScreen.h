@@ -211,7 +211,9 @@ private:
                  _tcp ? (unsigned)_tcp->rx_frames() : 0,
                  _tcp ? (unsigned)_tcp->tx_frames() : 0);
         _disp.setCursor(0, 44); _disp.print(line);
-        snprintf(line, sizeof(line), "HEAP %uk", (unsigned)(ESP.getFreeHeap() / 1024));
+        snprintf(line, sizeof(line), "AIR %uk/h SHED %u",
+                 _mc ? (unsigned)(_mc->air_bytes_hour() / 1024) : 0,
+                 _mc ? (unsigned)_mc->air_shed() : 0);
         _disp.setCursor(0, 54); _disp.print(line);
     }
 

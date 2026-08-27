@@ -217,16 +217,22 @@ bool extract_rns_token(const uint8_t* data, size_t len, uint8_t out[RNS_DST_LEN]
     return true;
 }
 
-bool link_id_preimage(const uint8_t* data, size_t len, std::vector<uint8_t>& out) {
+bool packet_hash_preimage(const uint8_t* data, size_t len, std::vector<uint8_t>& out) {
     out.clear();
     if (data == nullptr || len < 2) return false;
-    if ((data[0] & 0x03) != RNS_PTYPE_LINK_REQ) return false;
     uint8_t header_type = (uint8_t)((data[0] & 0x40) >> 6);
     size_t start = (header_type == 1) ? (2 + RNS_DST_LEN) : 2;
     if (len < start) return false;
     out.push_back((uint8_t)(data[0] & 0x0F));
     out.insert(out.end(), data + start, data + len);
     return true;
+}
+
+bool link_id_preimage(const uint8_t* data, size_t len, std::vector<uint8_t>& out) {
+    out.clear();
+    if (data == nullptr || len < 2) return false;
+    if ((data[0] & 0x03) != RNS_PTYPE_LINK_REQ) return false;
+    return packet_hash_preimage(data, len, out);
 }
 
 bool extract_path_request_target(const uint8_t* data, size_t len,

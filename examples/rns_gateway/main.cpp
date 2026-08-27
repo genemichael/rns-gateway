@@ -267,6 +267,7 @@ static void rns_task(void* arg) {
   mccfg.name = "MeshCore";
   mccfg.path_req_rate_ms = g_cfg.path_req_rate_s * 1000UL;
   mccfg.announce_rate_ms = g_cfg.announce_rate_s * 1000UL;
+  mccfg.air_budget_bytes_h = g_cfg.air_budget_kb_h * 1024UL;
 #ifdef RNS_GW_PROP_ONLY
   // Prop-restricted variant: policy is forced on at build time so it cannot
   // be disabled from the portal — restriction is a property of the firmware.
@@ -456,6 +457,7 @@ void setup() {
   // bridge channel it joins is the configured one.
   g_cfg.load();
   the_mesh.setBridgeChannel(g_cfg.chan_name, g_cfg.chan_psk);
+  the_mesh.setTunnelFlood(g_cfg.tunnel_flood);
 
   IdentityStore store(SPIFFS, "/identity");
 #else
@@ -585,7 +587,7 @@ void loop() {
     // coordination — send whenever, read the totals later.
     slog("[hb] ip=%s up=%us sta=%d ap=%d tcpcli=%d tcprx=%u tcptx=%u chan=%d rns_tx=%u rns_rx=%u chan_msgs=%u "
                   "ann_drop=%u peers=%u routes=%u direct=%u dfall=%u bindtx=%u bindrx=%u "
-                  "outq=%u txdrop=%u rxdrop=%u heap=%u psram=%u\n",
+                  "outq=%u txdrop=%u rxdrop=%u airh=%u airtot=%u shed=%u heap=%u psram=%u\n",
                   _sta_up ? WiFi.localIP().toString().c_str() : "-",
                   now / 1000, _sta_up ? 1 : 0, _ap_up ? 1 : 0,
                   _tcp_impl ? _tcp_impl->clientCount() : 0,
@@ -604,6 +606,9 @@ void loop() {
                   _mc_impl ? _mc_impl->bind_rx() : 0,
                   _mc_impl ? (unsigned)_mc_impl->outq_depth() : 0,
                   the_mesh.txDropped(), the_mesh.rxDropped(),
+                  _mc_impl ? _mc_impl->air_bytes_hour() : 0,
+                  _mc_impl ? _mc_impl->air_bytes_total() : 0,
+                  _mc_impl ? _mc_impl->air_shed() : 0,
                   (unsigned)ESP.getFreeHeap(),
                   (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
   }

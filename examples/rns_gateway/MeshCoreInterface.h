@@ -69,6 +69,16 @@ public:
         size_t      max_outq      = 64;
         size_t      max_assembly  = 16;
 
+        // ── Aggregate airtime budget ────────────────────────────────────────
+        // Hard ceiling on what the tunnel may put on the air per rolling
+        // hour, in bytes (0 = unlimited). Per-destination throttles bound
+        // each destination but not the SUM — N destinations legitimately
+        // announcing is still N× the airtime, on spectrum shared with
+        // people who never asked to carry it. Above 80% of budget the
+        // shedding starts with announces and path requests (the network
+        // recovers them on demand); at 100% everything is dropped.
+        uint32_t    air_budget_bytes_h = 0;
+
         // ── Prop-node-restricted policy (the *_prop build variants) ─────────
         // When set, outbound mesh traffic must serve a whitelisted destination
         // (see prop_add_dest) or a link established with one. Runtime flag so
@@ -105,6 +115,9 @@ public:
     uint32_t    bind_tx()        const { return _bind_tx; }
     uint32_t    bind_rx()        const { return _bind_rx; }
     uint32_t    prop_dropped()   const { return _prop_dropped; }
+    uint32_t    air_bytes_hour() const { return _air_bytes_window; }
+    uint32_t    air_bytes_total() const { return _air_bytes_total; }
+    uint32_t    air_shed()       const { return _air_shed; }
 
     // Peer table row for the status screen. Returns false when idx is past
     // the end. Call from the RNS task only (same owner as the maps).
@@ -212,6 +225,14 @@ private:
     uint32_t          _bind_tx = 0;
     uint32_t          _bind_rx = 0;
     uint32_t          _prop_dropped = 0;
+
+    // Airtime accounting (bytes actually handed to the radio, incl. framing).
+    uint32_t          _air_bytes_window = 0;
+    uint32_t          _air_bytes_total  = 0;
+    uint32_t          _air_window_start_ms = 0;
+    uint32_t          _air_shed = 0;
+    void note_air(size_t bytes);
+    bool air_budget_ok(uint8_t ptype, uint8_t dtype, size_t est_bytes);
 
     MeshCoreTunnel::PropPolicy _prop;
 

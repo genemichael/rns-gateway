@@ -116,6 +116,7 @@ class MyMesh : public BaseChatMesh, public CommonCLICallbacks, public MeshCoreLi
   float pending_bw;
   uint8_t pending_sf;
   uint8_t pending_cr;
+  bool _tunnel_flood;                // see setTunnelFlood
   ChannelDetails* _bridge_channel;   // the tunnel channel; NULL until joined
   char _chan_name[32];               // seeded from build flags, overridden by config
   char _chan_psk[45];                // base64 of a 16- or 32-byte key
@@ -158,8 +159,11 @@ protected:
   void onSendTimeout() override { }
   // Base BaseChatMesh floods with path_hash_size=1; match companion_radio and
   // use the configured path_hash_mode so our floods encode like the rest of
-  // the mesh.
+  // the mesh. Both overloads also honor the zero-hop tunnel policy (see
+  // setTunnelFlood): flood routing exports our airtime to every repeater in
+  // the region, which gateways in direct RF range have no need of.
   void sendFloodScoped(const mesh::GroupChannel& channel, mesh::Packet* pkt, uint32_t delay_millis = 0) override;
+  void sendFloodScoped(const ContactInfo& recipient, mesh::Packet* pkt, uint32_t delay_millis = 0) override;
   uint8_t onContactRequest(const ContactInfo& contact, uint32_t sender_timestamp, const uint8_t* data, uint8_t len, uint8_t* reply) override { return 0; }
   void onContactResponse(const ContactInfo& contact, const uint8_t* data, uint8_t len) override { }
 
@@ -169,6 +173,12 @@ public:
   // Call before begin(). Overrides the BRIDGE_CHANNEL_* build-flag defaults
   // with values from the stored config.
   void setBridgeChannel(const char* name, const char* psk);
+
+  // Call before begin(). false (default) = zero-hop: our transmissions are
+  // NOT re-flooded by mesh repeaters — correct whenever the peer gateway is
+  // in direct RF range. true = flood-route through repeaters (opt-in; costs
+  // the whole region airtime for every fragment).
+  void setTunnelFlood(bool use_repeaters) { _tunnel_flood = use_repeaters; }
 
   void begin(FILESYSTEM* fs);
   void loop();

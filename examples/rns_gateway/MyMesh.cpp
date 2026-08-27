@@ -18,6 +18,7 @@ MyMesh::MyMesh(mesh::MainBoard& board, mesh::Radio& radio, mesh::MillisecondCloc
   _bridge_channel = NULL;
   memset(_echo_ring, 0, sizeof(_echo_ring));
   _echo_next = 0;
+  _tunnel_flood = false;
   _tx_queue = NULL;
   _rx_queue = NULL;
   _bind_queue = NULL;
@@ -300,7 +301,19 @@ bool MyMesh::isOwnEcho(const char* text) {
 }
 
 void MyMesh::sendFloodScoped(const mesh::GroupChannel& channel, mesh::Packet* pkt, uint32_t delay_millis) {
+  if (!_tunnel_flood) {
+    sendZeroHop(pkt, delay_millis);
+    return;
+  }
   sendFlood(pkt, delay_millis, _prefs.path_hash_mode + 1);
+}
+
+void MyMesh::sendFloodScoped(const ContactInfo& recipient, mesh::Packet* pkt, uint32_t delay_millis) {
+  if (!_tunnel_flood) {
+    sendZeroHop(pkt, delay_millis);
+    return;
+  }
+  BaseChatMesh::sendFloodScoped(recipient, pkt, delay_millis);
 }
 
 uint32_t MyMesh::calcFloodTimeoutMillisFor(uint32_t pkt_airtime_millis) const {

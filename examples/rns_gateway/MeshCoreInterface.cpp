@@ -132,6 +132,7 @@ void MeshCoreInterface::process_outq(uint32_t now) {
             INFOF("MeshCoreInterface: TX channel frag (%u chars) ts=%lu",
                   (unsigned)item.frag.size(), (unsigned long)ts);
             _link.sendChannelText(item.frag.c_str(), ts);
+            note_air(item.frag.size() + 32);   // + MeshCore packet framing
             _next_tx_ms = now + _cfg.fragment_delay_ms;
             return;
         }
@@ -141,10 +142,12 @@ void MeshCoreInterface::process_outq(uint32_t now) {
         if (!hex_to_bytes(item.target_hex, pk, 32)) {
             // Malformed target — degrade to channel.
             _link.sendChannelText(item.frag.c_str(), sender_ts());
+            note_air(item.frag.size() + 32);
             _next_tx_ms = now + _cfg.fragment_delay_ms;
             return;
         }
         INFOF("MeshCoreInterface: TX DIRECT frag -> %.12s...", item.target_hex.c_str());
+        note_air(item.frag.size() + 32);
         if (!_link.sendDirectText(pk, item.frag.c_str(), sender_ts())) {
             direct_fallback_to_channel(now);
             return;
@@ -326,6 +329,14 @@ bool MeshCoreInterface::send_outgoing(const RNS::Bytes& data) {
             _prop_dropped++;
             WARNINGF("MeshCoreInterface: prop-only dropped %s (%s)",
                      MeshCoreTunnel::packet_kind(p[0]), d.reason);
+            return false;
+        }
+    }
+
+    {
+        uint8_t total_est = MeshCoreTunnel::fragment_count(len, _cfg.payload_size);
+        size_t est_bytes = (size_t)total_est * (_cfg.payload_size + 46);
+        if (!air_budget_ok(p[0] & 0x03, (p[0] >> 2) & 0x03, est_bytes)) {
             return false;
         }
     }
@@ -551,6 +562,35 @@ void MeshCoreInterface::learn_token(const std::string& sender,
         }
     }
 
+    // DATA from a peer: pre-bind the packet hash so the delivery PROOF that
+    // comes back can route DIRECT to that peer. A proof is addressed to the
+    // hash of the packet it proves — never to any announced destination — so
+    // without this every opportunistic-delivery ack fell to the broadcast
+    // channel, where one lost fragment silently killed it and the sender's
+    // app retried the whole (already delivered!) message. Observed live
+    // 2026-08-27: retries of delivered traffic were a real share of the
+    // regional airtime footprint.
+    {
+        uint8_t ptype = full[0] & 0x03;
+        uint8_t dtype = (full[0] >> 2) & 0x03;
+        if (ptype == PTYPE_DATA && dtype != DTYPE_PLAIN) {
+            std::vector<uint8_t> ppre;
+            if (MeshCoreTunnel::packet_hash_preimage(full.data(), full.size(), ppre)) {
+                SHA256 psha;
+                psha.update(ppre.data(), ppre.size());
+                uint8_t pdig[32];
+                psha.finalize(pdig, sizeof(pdig));
+                std::string ph_hex = to_hex(pdig, MeshCoreTunnel::RNS_DST_LEN);
+                if (_rns_to_mc_map.find(ph_hex) == _rns_to_mc_map.end() &&
+                    _rns_to_mc_map.size() < _RNS_MAP_MAX) {
+                    // Deliberately NOT mark_state_dirty(): proof windows are
+                    // seconds, not reboots — no need to wear the flash.
+                    _rns_to_mc_map[ph_hex] = mc_key;
+                }
+            }
+        }
+    }
+
     // LINK_REQUEST: pre-bind the future link_id so the PROOF/DATA can go direct.
     std::vector<uint8_t> pre;
     if (MeshCoreTunnel::link_id_preimage(full.data(), full.size(), pre)) {
@@ -574,6 +614,42 @@ void MeshCoreInterface::learn_token(const std::string& sender,
 
 void MeshCoreInterface::on_incoming(const RNS::Bytes& data) {
     RNS::InterfaceImpl::handle_incoming(data);
+}
+
+void MeshCoreInterface::note_air(size_t bytes) {
+    uint32_t now = millis();
+    if ((now - _air_window_start_ms) >= 3600000UL) {
+        _air_window_start_ms = now;
+        _air_bytes_window = 0;
+    }
+    _air_bytes_window += (uint32_t)bytes;
+    _air_bytes_total  += (uint32_t)bytes;
+}
+
+// Admission check against the rolling-hour budget. Announces and path
+// requests shed first (recoverable on demand); everything sheds at the
+// ceiling. est_bytes is the on-air estimate for the whole packet.
+bool MeshCoreInterface::air_budget_ok(uint8_t ptype, uint8_t dtype, size_t est_bytes) {
+    if (_cfg.air_budget_bytes_h == 0) return true;
+    uint32_t now = millis();
+    if ((now - _air_window_start_ms) >= 3600000UL) {
+        _air_window_start_ms = now;
+        _air_bytes_window = 0;
+    }
+    uint32_t projected = _air_bytes_window + (uint32_t)est_bytes;
+    bool discovery = (ptype == PTYPE_ANNOUNCE) ||
+                     (ptype == PTYPE_DATA && dtype == DTYPE_PLAIN);
+    uint32_t limit = discovery ? (_cfg.air_budget_bytes_h -
+                                  _cfg.air_budget_bytes_h / 5)   // 80%
+                               : _cfg.air_budget_bytes_h;
+    if (projected > limit) {
+        _air_shed++;
+        WARNINGF("MeshCoreInterface: airtime budget shed %s (%u/%u this hour)",
+                 MeshCoreTunnel::ptype_name(ptype),
+                 (unsigned)_air_bytes_window, (unsigned)_cfg.air_budget_bytes_h);
+        return false;
+    }
+    return true;
 }
 
 bool MeshCoreInterface::rate_limit_ok(const uint8_t* data, size_t len) {
