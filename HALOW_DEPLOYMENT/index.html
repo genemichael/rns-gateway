@@ -861,7 +861,7 @@ plan is load-bearing:</p>
 <tr>
 <td>RNS LoRa (RNode)</td>
 <td>914.900 MHz</td>
-<td></td>
+<td>125 kHz BW, SF7</td>
 </tr>
 <tr>
 <td>HaLow (HD-01)</td>
@@ -872,17 +872,17 @@ plan is load-bearing:</p>
 </table>
 <p>Rules:</p>
 <ul>
-<li><strong>Lock the HaLow channel.</strong> Never leave auto-channel on — a unit that
+<li><strong>Lock the HaLow channel.</strong> Never leave auto-channel on. A unit that
   hops onto ~910 or ~915 will flatten a LoRa system, and the LoRa side
   fails <em>silently</em> (nodes just go deaf).</li>
 <li>HaLow channels are 1–8 MHz wide. At 902.5 with a 1 MHz width the top
-  edge sits near 903 MHz — comfortable clearance below 910.525. A wider
-  width setting (2/4/8 MHz) grows toward the LoRa frequencies; if you need
-  more HaLow throughput, grow <strong>downward</strong> in the band, not up.</li>
+  edge sits near 903 MHz. This is a comfortable clearance below 910.525. 
+  A wider width setting (2/4/8 MHz) grows toward the LoRa frequencies; 
+  if you need more HaLow throughput, grow <strong>downward</strong> in the band, not up.</li>
 <li>Separate antennas physically at any site that hosts more than one of
   these systems. Near-field overload desensitizes receivers regardless of
-  channel spacing — different masts or building corners, not adjacent
-  ports on one bracket.</li>
+  channel spacing (different masts or building corners, not adjacent
+  ports on one bracket).</li>
 <li><strong>Coexistence proof</strong>: after setup, run a MeshCore tunnel test while
   pushing sustained traffic through the HaLow link. Five minutes; do it
   once per site build-out.</li>
