@@ -107,6 +107,10 @@ public:
     uint32_t    rns_rx_packets() const { return _rns_rx_packets; }
     uint32_t    channel_msgs()   const { return _chan_msgs; }
     uint32_t    announce_suppressed() const { return _announce_suppressed; }
+    // Announces / path requests heard from the mesh that pre-marked our own
+    // throttles (cross-gateway dedup; see note_heard_on_mesh).
+    uint32_t    announce_heard() const { return _announce_heard; }
+    uint32_t    path_req_heard() const { return _path_req_heard; }
     size_t      outq_depth()     const { return _outq.size(); }
     size_t      peer_count()     const { return _peer_table.size(); }
     size_t      route_count()    const { return _rns_to_mc_map.size(); }
@@ -172,6 +176,7 @@ private:
     void process_tunnel_text(const std::string& text, const std::string& sender);
     void learn_token(const std::string& sender, const std::vector<uint8_t>& full);
     bool rate_limit_ok(const uint8_t* data, size_t len);
+    void note_heard_on_mesh(const uint8_t* data, size_t len);
     void run_cleanup(uint32_t now);
 
     // Peer discovery.
@@ -220,6 +225,8 @@ private:
     uint32_t          _rns_rx_packets = 0;
     uint32_t          _chan_msgs = 0;
     uint32_t          _announce_suppressed = 0;
+    uint32_t          _announce_heard = 0;
+    uint32_t          _path_req_heard = 0;
     uint32_t          _direct_tx_frames = 0;
     uint32_t          _direct_fallbacks = 0;
     uint32_t          _bind_tx = 0;

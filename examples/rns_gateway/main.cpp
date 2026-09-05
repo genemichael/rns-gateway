@@ -872,7 +872,7 @@ void loop() {
     // mesh means Transport swallowed it. Cumulative so a test needs no timing
     // coordination — send whenever, read the totals later.
     slog("[hb] ip=%s up=%us sta=%d ap=%d tcpcli=%d tcprx=%u tcptx=%u chan=%d rns_tx=%u rns_rx=%u chan_msgs=%u "
-                  "ann_drop=%u peers=%u routes=%u direct=%u dfall=%u bindtx=%u bindrx=%u "
+                  "ann_drop=%u ann_heard=%u prq_heard=%u peers=%u routes=%u direct=%u dfall=%u bindtx=%u bindrx=%u "
                   "outq=%u txdrop=%u rxdrop=%u airh=%u airtot=%u shed=%u heap=%u psram=%u\n",
                   _sta_up ? WiFi.localIP().toString().c_str() : "-",
                   now / 1000, _sta_up ? 1 : 0, _ap_up ? 1 : 0,
@@ -884,6 +884,8 @@ void loop() {
                   _mc_impl ? _mc_impl->rns_rx_packets() : 0,
                   _mc_impl ? _mc_impl->channel_msgs() : 0,
                   _mc_impl ? _mc_impl->announce_suppressed() : 0,
+                  _mc_impl ? _mc_impl->announce_heard() : 0,
+                  _mc_impl ? _mc_impl->path_req_heard() : 0,
                   _mc_impl ? (unsigned)_mc_impl->peer_count() : 0,
                   _mc_impl ? (unsigned)_mc_impl->route_count() : 0,
                   _mc_impl ? _mc_impl->direct_tx() : 0,

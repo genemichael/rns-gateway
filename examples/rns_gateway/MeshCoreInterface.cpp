@@ -612,7 +612,43 @@ void MeshCoreInterface::learn_token(const std::string& sender,
     }
 }
 
+// Cross-gateway dedup. A phone on Bluetooth connects to EVERY gateway in
+// range (Columba's BLE interface is a peer pool, not a pairing), so each of
+// its announces and path requests leaves through every one of them, and
+// each gateway put its own copy on the channel: N gateways, N copies. The
+// per-destination throttles only ever knew about what THIS gateway sent.
+// Now a copy heard FROM the mesh marks the throttle exactly as if we had
+// sent it — someone already told the channel — so the first gateway to
+// forward wins and the rest stay quiet for the window. The path-response
+// bypass is untouched: answering a path request still gets through.
+void MeshCoreInterface::note_heard_on_mesh(const uint8_t* data, size_t len) {
+    if (len < 12) return;
+    uint8_t flags = data[0];
+    uint8_t ptype = flags & 0x03;
+    uint8_t dtype = (flags >> 2) & 0x03;
+    uint32_t now = millis();
+
+    if (ptype == PTYPE_ANNOUNCE && _cfg.announce_rate_ms > 0) {
+        uint8_t tok[MeshCoreTunnel::RNS_DST_LEN];
+        if (MeshCoreTunnel::extract_rns_token(data, len, tok)) {
+            _announce_sent[to_hex(tok, 10)] = now;
+            _announce_heard++;
+        }
+    } else if (ptype == PTYPE_DATA && dtype == DTYPE_PLAIN && _cfg.path_req_rate_ms > 0) {
+        uint8_t target[MeshCoreTunnel::RNS_DST_LEN];
+        if (MeshCoreTunnel::extract_path_request_target(data, len, target)) {
+            // first = now - burst_window puts us past the burst allowance, so
+            // our own request for the same target is held for the full rate
+            // window rather than let through as "part of the burst".
+            _path_req_sent[to_hex(target, 10)] =
+                std::make_pair(now - _cfg.path_req_burst_window_ms, now);
+            _path_req_heard++;
+        }
+    }
+}
+
 void MeshCoreInterface::on_incoming(const RNS::Bytes& data) {
+    note_heard_on_mesh(data.data(), data.size());
     RNS::InterfaceImpl::handle_incoming(data);
 }
 

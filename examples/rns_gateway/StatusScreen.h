@@ -60,7 +60,14 @@ public:
                mesh::MainBoard* board, NodePrefs* prefs) {
         _mc = mc; _tcp = tcp; _ble = ble; _board = board; _prefs = prefs;
         _alive = true;
+        // Explicit, because the drivers disagree: SSD1306Display::begin()
+        // marks the panel on, SH1106Display::begin() (T-Beam Supreme) does
+        // not — upstream's UITask calls turnOn() itself. Every draw below is
+        // gated on isOn(), so without this the Supreme showed the panel's
+        // random RAM for ever ("static") while everything else ran fine.
+        _disp.turnOn();
         _wake_at = millis();
+        _dirty = true;
     }
 
     // Two-line message that replaces the page until clearNotice() or the
