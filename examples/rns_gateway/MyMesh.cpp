@@ -101,6 +101,26 @@ void MyMesh::begin(FILESYSTEM* fs) {
   _cli.loadPrefs(_fs);
   acl.load(_fs, self_id);
 
+  // Every gateway shipped with the same MeshCore node name (ADVERT_NAME),
+  // so two of them on one mesh were indistinguishable in every contact
+  // list. A name that is still exactly the build default gets a suffix from
+  // the identity — the last two public-key bytes — and is saved, once. A
+  // name the user has set (portal or CLI) is never touched. Runs on already
+  // deployed devices too: they upgrade themselves on the first boot of this
+  // firmware.
+  if (strcmp(_prefs.node_name, ADVERT_NAME) == 0) {
+    char suffix[6];
+    snprintf(suffix, sizeof(suffix), " %02x%02x",
+             self_id.pub_key[PUB_KEY_SIZE - 2], self_id.pub_key[PUB_KEY_SIZE - 1]);
+    size_t room = sizeof(_prefs.node_name) - 1 - strlen(_prefs.node_name);
+    if (room >= strlen(suffix)) {
+      strcat(_prefs.node_name, suffix);
+      _cli.savePrefs(_fs);
+      Serial.printf("[prefs] node name was the build default; now '%s' (saved)\n",
+                    _prefs.node_name);
+    }
+  }
+
   radio_driver.setParams(_prefs.freq, _prefs.bw, _prefs.sf, _prefs.cr);
   radio_driver.setTxPower(_prefs.tx_power_dbm);
 

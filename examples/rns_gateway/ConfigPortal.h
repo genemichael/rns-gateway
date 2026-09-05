@@ -53,23 +53,33 @@
 // friends as bare macros that collide with RNS::Type's constants.
 typedef void (*RadioReadFn)(float& freq, float& bw, uint8_t& sf, uint8_t& cr, uint8_t& txp);
 typedef bool (*RadioApplyFn)(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t txp);
+// MeshCore node name and RTC epoch (read), and a one-shot CLI command relay
+// to the mesh task (`set name …`, `time …`). Returns false if one is already
+// pending — the caller just reports "try again".
+typedef void (*NodeReadFn)(char* name, size_t len, uint32_t& epoch);
+typedef bool (*CommandFn)(const char* cmd);
 
 class ConfigPortal {
 public:
     ConfigPortal() : _server(PORTAL_HTTP_PORT), _cfg(nullptr),
                      _read_radio(nullptr), _apply_radio(nullptr),
+                     _read_node(nullptr), _run_cmd(nullptr),
                      _dns_active(false), _started(false) {}
 
-    void begin(GatewayConfig& cfg, RadioReadFn read_radio, RadioApplyFn apply_radio) {
+    void begin(GatewayConfig& cfg, RadioReadFn read_radio, RadioApplyFn apply_radio,
+               NodeReadFn read_node, CommandFn run_cmd) {
         if (_started) return;
         _cfg = &cfg;
         _read_radio = read_radio;
         _apply_radio = apply_radio;
+        _read_node = read_node;
+        _run_cmd = run_cmd;
 
         _server.on("/",       HTTP_GET,  [this]{ handleRoot(); });
         _server.on("/save",   HTTP_POST, [this]{ handleSave(); });
         _server.on("/reset",  HTTP_POST, [this]{ handleReset(); });
         _server.on("/reboot", HTTP_POST, [this]{ handleReboot(); });
+        _server.on("/clock",  HTTP_POST, [this]{ handleClock(); });
         // The slog() ring, oldest line first. This is how you read the log
         // without opening the serial port — which resets the board.
         _server.on("/log",    HTTP_GET,  [this]{ handleLog(); });
@@ -193,6 +203,8 @@ private:
 
         float freq = 0, bw = 0; uint8_t sf = 0, cr = 0, txp = 0;
         if (_read_radio) _read_radio(freq, bw, sf, cr, txp);
+        char node_name[32] = ""; uint32_t epoch = 0;
+        if (_read_node) _read_node(node_name, sizeof(node_name), epoch);
 
         _server.setContentLength(CONTENT_LENGTH_UNKNOWN);
         _server.send(200, "text/html", "");
@@ -291,6 +303,14 @@ private:
         checkbox("mdns_en", "Advertise over mDNS", _cfg->mdns_enabled);
         text("mdns_host", "Hostname (without .local)", _cfg->mdns_host, 30, false);
 
+        // ── MeshCore node ───────────────────────────────────────────────────
+        _server.sendContent(F("<h2>MeshCore node</h2>"));
+        text("node_name", "Node name (as other MeshCore users see it)", node_name, 31, false);
+        _server.sendContent(F("<p class='note'>Every gateway ships with the same "
+                              "name plus a unique suffix from its identity. Give it a "
+                              "name of your own; it is stored in MeshCore's prefs, not "
+                              "this file.</p>"));
+
         // ── Bridge channel ──────────────────────────────────────────────────
         _server.sendContent(F("<h2>MeshCore bridge channel</h2>"));
         text("chan_name", "Channel name", _cfg->chan_name, 30, false);
@@ -344,8 +364,33 @@ private:
           "<form method='POST' action='/reset' style='display:inline' "
           "onsubmit=\"return confirm('Erase saved configuration and reboot?')\">"
           "<button class='warn' type='submit'>Factory reset</button></form>"
-          "</body></html>"
         ));
+
+        // ── Clock ───────────────────────────────────────────────────────────
+        // Its own form, after the main one: it acts immediately and does not
+        // reboot. The browser supplies the epoch at click time.
+        {
+            char when[40];
+            if (epoch > 1700000000UL) {
+                time_t t = (time_t)epoch; struct tm tmv; gmtime_r(&t, &tmv);
+                strftime(when, sizeof(when), "%Y-%m-%d %H:%M:%S UTC", &tmv);
+            } else {
+                strlcpy(when, "NOT SET (counting from boot)", sizeof(when));
+            }
+            _server.sendContent(F("<h2>Clock</h2><p class='note'>Device time now: "));
+            _server.sendContent(esc(when));
+            _server.sendContent(F("</p><form method='POST' action='/clock'>"
+                                  "<input type='hidden' name='epoch' id='epoch' value='0'>"
+                                  "<button type='submit' style='margin-top:.2rem' "
+                                  "onclick=\"document.getElementById('epoch').value="
+                                  "Math.floor(Date.now()/1000)\">Set clock from this "
+                                  "browser</button></form>"
+                                  "<p class='note'>MeshCore stamps every packet with this "
+                                  "clock. On WiFi with a station joined it is set from NTP "
+                                  "automatically; a Bluetooth-mode device gets it here "
+                                  "during setup, or from GPS where fitted.</p>"));
+        }
+        _server.sendContent(F("</body></html>"));
         _server.sendContent("");
     }
 
@@ -373,6 +418,20 @@ private:
         copyArg("chan_name", c.chan_name, sizeof(c.chan_name));
         copyArg("chan_psk",  c.chan_psk,  sizeof(c.chan_psk));
         copyArg("prop_dests", c.prop_dests, sizeof(c.prop_dests));
+
+        // Node name belongs to MeshCore's prefs: relay `set name` to the mesh
+        // task rather than storing it here. Only when it actually changed.
+        bool name_ok = true;
+        if (_server.hasArg("node_name") && _read_node && _run_cmd) {
+            char cur[32] = ""; uint32_t ep = 0;
+            _read_node(cur, sizeof(cur), ep);
+            String want = _server.arg("node_name");
+            want.trim();
+            if (want.length() > 0 && want.length() < 32 && want != cur) {
+                String cmd = "set name " + want;
+                name_ok = _run_cmd(cmd.c_str());
+            }
+        }
 
         if (_server.hasArg("pr_rate")) {
             long v = _server.arg("pr_rate").toInt();
@@ -418,7 +477,7 @@ private:
                         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
                         "<title>Saved</title></head>"
                         "<body style='font:15px system-ui;background:#111;color:#eee;padding:1rem'>");
-        if (cfg_ok && radio_ok) {
+        if (cfg_ok && radio_ok && name_ok) {
             body += F("<h2>Saved</h2><p>Rebooting. If you changed the AP settings "
                       "you will need to rejoin the new network.</p>");
             if (c.bleMode()) {
@@ -430,6 +489,7 @@ private:
             body += F("<h2>Partly saved</h2><p>");
             if (!cfg_ok)   body += F("Writing the config file failed. ");
             if (!radio_ok) body += F("The radio parameters were rejected. ");
+            if (!name_ok)  body += F("The node name could not be applied (busy) — try again. ");
             body += F("Check the serial log.</p>");
         }
         body += F("</body></html>");
@@ -452,6 +512,31 @@ private:
         if (denied()) return;
         _server.send(200, "text/plain", "Rebooting");
         deferredReboot();
+    }
+
+    // Set the RTC from the browser's clock, via the mesh task's `time` CLI.
+    void handleClock() {
+        if (denied()) return;
+        unsigned long epoch = _server.hasArg("epoch") ? strtoul(_server.arg("epoch").c_str(), nullptr, 10) : 0;
+        String body = F("<!doctype html><body style='font:15px system-ui;background:#111;"
+                        "color:#eee;padding:1rem'>");
+        if (epoch < 1700000000UL) {
+            body += F("<h2>Clock not set</h2><p>The browser did not supply a sane time "
+                      "(JavaScript disabled?).</p>");
+        } else if (!_run_cmd) {
+            body += F("<h2>Clock not set</h2><p>No command relay.</p>");
+        } else {
+            char cmd[32];
+            snprintf(cmd, sizeof(cmd), "time %lu", epoch);
+            if (_run_cmd(cmd)) {
+                slog("[portal] clock set from browser: %lu\r\n", epoch);
+                body += F("<h2>Clock set</h2><p>Device time updated.</p>");
+            } else {
+                body += F("<h2>Busy</h2><p>Another command is pending — try again.</p>");
+            }
+        }
+        body += F("<p><a href='/' style='color:#8bd'>Back</a></p></body></html>");
+        _server.send(200, "text/html", body);
     }
 
     // Serve the slog() ring as plain text. Snapshot under the lock into a
@@ -483,10 +568,12 @@ public:
 
 private:
 
-    // Let the response actually reach the browser before the reset.
+    // Let the response actually reach the browser before the reset — and let
+    // a relayed `set name` run on the mesh task first (it loops every few ms;
+    // a second is generous).
     void deferredReboot() {
         _server.client().flush();
-        vTaskDelay(pdMS_TO_TICKS(400));
+        vTaskDelay(pdMS_TO_TICKS(1000));
         slogln("[portal] rebooting to apply configuration");
         ESP.restart();
     }
@@ -526,6 +613,8 @@ private:
     GatewayConfig* _cfg;
     RadioReadFn    _read_radio;
     RadioApplyFn   _apply_radio;
+    NodeReadFn     _read_node;
+    CommandFn      _run_cmd;
     bool           _dns_active;
     bool           _started;
     const char*    _ble_name = nullptr;

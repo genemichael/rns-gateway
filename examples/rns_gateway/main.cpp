@@ -155,6 +155,31 @@ static void portal_read_radio(float& freq, float& bw, uint8_t& sf,
   freq = snap.freq; bw = snap.bw; sf = snap.sf; cr = snap.cr; txp = snap.txp;
 }
 
+// Same boundary, generalised: a one-slot relay for CLI commands the portal
+// (core 0) needs run on the mesh task (core 1) — `set name`, `time`. The
+// mesh loop executes it through handleCommand(), so validation and
+// persistence stay where MeshCore keeps them.
+static char          _cmd_req[96];
+static volatile bool _cmd_req_pending = false;
+
+static bool portal_run_command(const char* cmd) {
+  if (_cmd_req_pending) return false;
+  strlcpy(_cmd_req, cmd, sizeof(_cmd_req));
+  _cmd_req_pending = true;
+  return true;
+}
+
+// Read-side snapshot for the portal: MeshCore node name and the RTC. Written
+// by loop() only, like _radio_now.
+struct NodeInfo { char name[32]; uint32_t epoch; };
+static NodeInfo _node_now = { "", 0 };
+
+static void portal_read_node(char* name, size_t len, uint32_t& epoch) {
+  NodeInfo snap = _node_now;
+  strlcpy(name, snap.name, len);
+  epoch = snap.epoch;
+}
+
 static bool portal_apply_radio(float freq, float bw, uint8_t sf,
                                uint8_t cr, uint8_t txp) {
   // Mirror CommonCLI's own validation so the portal rejects nonsense before it
@@ -381,6 +406,7 @@ static void rns_task(void* arg) {
   // BLE start lines below reach the desk. No-op unless RNS_GW_UDP_LOG_HOST.
   bool udplog_started = false;
   if (_sta_up) { udplog_begin(); udplog_started = true; }
+  bool ntp_started = false, ntp_applied = false;
 
   // The portal (and mDNS with it) comes up as soon as ANY network exists —
   // before Reticulum, so a node with a broken RNS config is still
@@ -391,7 +417,8 @@ static void rns_task(void* arg) {
   // that associates late is handled in the loop below.
   bool portal_started = false;
   if (net_up()) {
-    g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio);
+    g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio,
+                   portal_read_node, portal_run_command);
     portal_started = true;
   }
 
@@ -558,8 +585,33 @@ static void rns_task(void* arg) {
     }
 
     if (!portal_started && net_up()) {
-      g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio);
+      g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio,
+                     portal_read_node, portal_run_command);
       portal_started = true;
+    }
+
+    // Clock. A gateway has no idea what time it is until something tells
+    // it, and MeshCore stamps every packet with the RTC. In WiFi mode with
+    // a station joined, NTP is the obvious source: start SNTP once the
+    // station is up and, the first time it yields a sane time, hand it to
+    // the mesh task through the same `time` CLI path the portal button
+    // uses. The RTC (I2C part or the volatile fallback) then free-runs.
+    // BLE-mode devices get their time from the portal button during setup,
+    // or from GPS where fitted (the location provider feeds the RTC itself).
+    if (_sta_up && !ntp_started) {
+      configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+      ntp_started = true;
+    }
+    if (ntp_started && !ntp_applied) {
+      time_t t = time(nullptr);
+      if (t > 1700000000) {           // SNTP has answered (after Nov 2023)
+        char c[32];
+        snprintf(c, sizeof(c), "time %lu", (unsigned long)t);
+        if (portal_run_command(c)) {
+          ntp_applied = true;
+          slog("[clock] NTP: setting RTC to %lu\r\n", (unsigned long)t);
+        }
+      }
     }
     if (!udplog_started && _sta_up) {
       udplog_begin();
@@ -778,10 +830,24 @@ void loop() {
     _radio_req_pending = false;
   }
 
-  // Publish the current radio settings for the portal to display.
+  // Run a CLI command the portal (or NTP) parked for the mesh task.
+  if (_cmd_req_pending) {
+    char cmd[sizeof(_cmd_req)], reply[160];
+    strlcpy(cmd, _cmd_req, sizeof(cmd));
+    reply[0] = 0;
+    the_mesh.handleCommand(0, cmd, reply);
+    slog("[cfg] %s -> %s\r\n", cmd, reply[0] ? reply : "(no reply)");
+    _cmd_req_pending = false;
+  }
+
+  // Publish the current radio settings, node name and clock for the portal.
   {
     NodePrefs* p = the_mesh.getNodePrefs();
     _radio_now = { p->freq, p->bw, p->sf, p->cr, (uint8_t)p->tx_power_dbm };
+    NodeInfo n;
+    strlcpy(n.name, p->node_name, sizeof(n.name));
+    n.epoch = rtc_clock.getCurrentTime();
+    _node_now = n;
   }
 
   // Bring-up heartbeat, same fields as the two-board build so the output is
