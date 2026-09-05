@@ -19,6 +19,8 @@ on:
       - 'test/host/**'
       - 'scripts/**'
       - 'variants/heltec_v4/platformio.ini'
+      - 'variants/lilygo_tbeam_supreme_SX1262/platformio.ini'
+      - 'variants/rns_gateway/platformio.ini'
       - '.github/workflows/rns-gateway-checks.yml'
   pull_request:
     paths:
@@ -26,6 +28,8 @@ on:
       - 'test/host/**'
       - 'scripts/**'
       - 'variants/heltec_v4/platformio.ini'
+      - 'variants/lilygo_tbeam_supreme_SX1262/platformio.ini'
+      - 'variants/rns_gateway/platformio.ini'
 
 jobs:
   parity:
@@ -85,4 +89,4 @@ jobs:
           EOF
 
       - name: Build
-        run: pio run -e heltec_v4_rns_gateway
+        run: pio run -e heltec_v4_rns_gateway -e tbeam_supreme_rns_gateway

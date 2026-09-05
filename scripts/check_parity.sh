@@ -10,8 +10,8 @@
 #
 # The rules:
 #   1. No upstream file may be deleted or renamed.
-#   2. Exactly one pre-existing upstream file may be touched —
-#      variants/heltec_v4/platformio.ini — and only by appending (0 deletions).
+#   2. Only the listed board variant ini files may be touched —
+#      variants/<board>/platformio.ini — and only by appending (0 deletions).
 #   3. Everything else in the diff must be a brand-new file.
 #
 # Usage:  scripts/check_parity.sh [upstream-ref]
@@ -21,8 +21,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# The one upstream file we are allowed to modify, and only additively.
-APPEND_ONLY_FILE="variants/heltec_v4/platformio.ini"
+# The upstream files we are allowed to modify, and only additively: one
+# appended block per board variant the role runs on.
+APPEND_ONLY_FILES="variants/heltec_v4/platformio.ini variants/lilygo_tbeam_supreme_SX1262/platformio.ini"
+
+is_append_only() {
+  local f
+  for f in $APPEND_ONLY_FILES; do [ "$1" = "$f" ] && return 0; done
+  return 1
+}
 
 # Prose exception: the standalone release repo (genemichael/rns-gateway) shows
 # the root README as the product's front page, so it is REPLACED, not appended.
@@ -83,7 +90,7 @@ while IFS=$'\t' read -r added deleted path; do
     continue          # documentation front page — replacement is intentional
   fi
 
-  if [ "$path" = "$APPEND_ONLY_FILE" ]; then
+  if is_append_only "$path"; then
     if [ "$deleted" -ne 0 ]; then
       echo "FAIL: ${path} has ${deleted} deleted line(s)."
       echo "  This file may only be APPENDED to — one clearly delimited block"
@@ -96,7 +103,7 @@ while IFS=$'\t' read -r added deleted path; do
   fi
 
   echo "FAIL: upstream file modified: ${path}  (+${added} -${deleted})"
-  echo "  Only ${APPEND_ONLY_FILE} may be touched. Put new code in"
+  echo "  Only these may be touched (append-only): ${APPEND_ONLY_FILES}. Put new code in"
   echo "  examples/rns_gateway/, lib/, test/host/ or scripts/ instead."
   echo
   fail=1
