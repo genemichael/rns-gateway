@@ -30,9 +30,14 @@ This is the MeshCore fork hosting the RNS gateway role. All work happens in
 - BLE = ble-reticulum peripheral, normative reference is the Python repo
   (torlando-tech/ble-reticulum @ 07d9413); phone apps are conformance
   subjects. Fragment codec is pure and golden-tested.
-- Logs without serial: portal `/log` serves the slog() ring. BLE bring-up
-  envs (`_ble_bringup` tracked, `_ble_dbg` local) keep WiFi up for it only;
-  `RNS_GW_BLE_DEBUG_WIFI` must never ship.
+- Product variants: Stationary, Mobile, **BLE** (defaults to Bluetooth;
+  boots into the WiFi setup session until a PSK is saved). Same firmware.
+  Boards: Heltec V4 (`heltec_v4_rns_gateway_*`), T-Beam Supreme
+  (`tbeam_supreme_rns_gateway[_ble]`); role flags shared via
+  `variants/rns_gateway/platformio.ini` [rns_gateway_role].
+- Logs without serial: portal `/log` serves the slog() ring. Local-ini
+  `_ble_dbg` envs keep WiFi up + push UDP logs; `RNS_GW_BLE_DEBUG_WIFI`
+  must never ship.
 
 ## Build / flash
 - Board A (station + AP): `pio run -e heltec_v4_rns_gateway -t upload`

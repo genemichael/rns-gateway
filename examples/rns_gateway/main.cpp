@@ -714,10 +714,18 @@ void setup() {
     g_setup_boot_flag = 0;
     g_setup_session = true;
   }
+  // A Bluetooth-mode device with no channel PSK has nothing to bridge and
+  // no portal to fix that with, so the BLE variant (which defaults to
+  // Bluetooth) boots into the WiFi setup session until it is configured.
+  const bool unconfigured = (g_cfg.chan_psk[0] == 0);
+  if (g_cfg.bleMode() && unconfigured && !g_setup_session) g_setup_session = true;
   g_ble_mode = g_cfg.bleMode() && !g_setup_session;
   slog("[cfg] client access: %s%s%s\r\n",
        g_ble_mode ? "Bluetooth LE" : "WiFi",
-       g_setup_session ? " (SETUP SESSION — stored config says Bluetooth; WiFi for this boot only)" : "",
+       g_setup_session ? (unconfigured
+                          ? " (SETUP SESSION — no channel PSK yet; WiFi until one is saved)"
+                          : " (SETUP SESSION — stored config says Bluetooth; WiFi for this boot only)")
+                       : "",
        (g_ble_mode && BLE_DEBUG_WIFI) ? " + WiFi kept up for /log (bring-up build)" : "");
 
   IdentityStore store(SPIFFS, "/identity");

@@ -11,6 +11,17 @@ handshakes, and passes Reticulum packets both ways over BLE, and an LXMF
 message reached the far side of the tunnel; the board is bound to the mesh
 at the same time. Android not yet tested. See [Milestones](#milestones).
 
+## The BLE variant
+
+`heltec_v4_rns_gateway_ble` (and `tbeam_supreme_rns_gateway_ble` on the
+T-Beam Supreme) is the product variant for a device that lives with a phone.
+Same firmware as Stationary and Mobile; its first-boot default is Bluetooth
+client access. Because a Bluetooth device has no portal, it boots into the
+**WiFi setup session** until a channel PSK has been saved: join its AP
+(`RNSGateway-BLE`, password `rnsgateway`), set the PSK (and the clock),
+save. From then on it boots in Bluetooth mode with WiFi off. Hold PRG ten
+seconds to get the setup session back.
+
 ## Either WiFi or BLE, never both
 
 Client access is a single setting in the portal, **Client access → WiFi / Bluetooth
@@ -60,14 +71,13 @@ are dedicated builds that keep WiFi up **only** for the portal:
 
 | Env | What it is |
 |---|---|
-| `heltec_v4_rns_gateway_ble_bringup` | tracked, no secrets; boots as AP `RNSGateway-BLE`, client access defaults to BLE, WiFi kept up for `/log` |
-| `heltec_v4_rns_gateway_ble_dbg` / `_b_ble_dbg` | in `platformio.local.ini`; boards A and B with their usual credentials plus the same two flags |
+| `heltec_v4_rns_gateway_*_ble_dbg` | in `platformio.local.ini` only; a board's usual credentials plus `-D RNS_GW_BLE_DEBUG_WIFI=1` (keep WiFi up in BLE mode) and `-D RNS_GW_UDP_LOG_HOST` (push log lines over UDP, see below) |
 
-The flags are `-D RNS_GW_CLIENT_ACCESS=1` (first-boot default = BLE; a stored
-config wins once saved) and `-D RNS_GW_BLE_DEBUG_WIFI=1` (keep WiFi up in BLE
-mode). The TCP server stays **off** in BLE mode even in these builds, so the
-phone under test still has no path except Bluetooth. `RNS_GW_BLE_DEBUG_WIFI`
-must never appear in a release env.
+The TCP server stays **off** in BLE mode even in these builds, so the phone
+under test still has no path except Bluetooth. `RNS_GW_BLE_DEBUG_WIFI` must
+never appear in a tracked env: with both radios up the ESP32 requires WiFi
+modem sleep, under which the station is only half reachable — see the
+bring-up findings.
 
 The log carries a `[mem]` line at boot, after Reticulum starts, after the BLE
 stack starts, and every 60 s: internal heap free / largest block / minimum
