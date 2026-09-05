@@ -6,9 +6,10 @@ WiFi. Columba on Android and iOS, and a Linux box running the
 connect to the device as BLE centrals and reach the MeshCore mesh through the
 gateway's Reticulum transport — same tunnel, same multi-hop behaviour, no WiFi.
 
-Status (2026-09-05): **running on hardware.** Columba Android connects,
-handshakes, and passes Reticulum packets both ways over BLE; the board is
-bound to the mesh at the same time. See [Milestones](#milestones).
+Status (2026-09-05): **running on hardware.** Columba **iOS** connects,
+handshakes, and passes Reticulum packets both ways over BLE, and an LXMF
+message reached the far side of the tunnel; the board is bound to the mesh
+at the same time. Android not yet tested. See [Milestones](#milestones).
 
 ## Either WiFi or BLE, never both
 
@@ -216,10 +217,10 @@ to raise upstream. None is worked around silently.
 | 1 | BLE stack up in BLE mode with WiFi down; heap figures at boot and every 60 s; logs readable without serial | **passed 2026-09-05 on board C**: advertising, nRF Connect connects with no PIN, identity reads back, OLED shows `CLI 1/3`. Bluedroid costs ~60 KB of internal heap (151 KB → 90 KB free with WiFi also up); ~150 KB free in real BLE mode. |
 | 2 | BleInterface, fragmentation codec with golden tests, mode either/or, path back to portal | built; portal WiFi→BLE switch **observed** (save turned WiFi off, board came up in BLE mode). PRG path back not yet exercised. |
 | 3.1 | Linux ble-reticulum ↔ gateway passes RNS traffic | not run — Columba is the target; Linux box optional |
-| 3.2 | LXMF to a destination on the far side of the tunnel, multiple hops confirmed | pending |
-| 3.3 | Columba Android connects, handshakes, passes traffic | **passed 2026-09-05**: `BLERX`/`BLETX` both climbing with the shipping Kotlin backend, no app-side or gateway-side workaround |
+| 3.2 | LXMF to a destination on the far side of the tunnel, multiple hops confirmed | **delivered 2026-09-05** from Columba iOS over BLE; hop count not yet recorded with `rnpath` |
+| 3.3 | Columba Android connects, handshakes, passes traffic | pending (Gene will test) |
 | 3.4 | WiFi → BLE → WiFi via portal, no reflash | pending |
-| 3.5 | Columba iOS | pending |
+| 3.5 | Columba iOS | **passed 2026-09-05** (out of order — it was the phone on hand): `BLERX`/`BLETX` both climbing with the shipping embedded-Python build, an LXMF message delivered across the tunnel, no app-side or gateway-side workaround |
 
 Static build figures, 2026-09-04 (`heltec_v4_rns_gateway_stationary`, same
 firmware either way — the BLE code is always compiled in):
