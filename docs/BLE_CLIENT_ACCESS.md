@@ -13,8 +13,9 @@ at the same time. Android not yet tested. See [Milestones](#milestones).
 
 ## The BLE variant
 
-`heltec_v4_rns_gateway_ble` (and `tbeam_supreme_rns_gateway_ble` on the
-T-Beam Supreme) is the product variant for a device that lives with a phone.
+**Mobile BLE** — `heltec_v4_rns_gateway_mobile_ble` and
+`tbeam_supreme_rns_gateway_mobile_ble` — is the product variant for a device
+that lives with a phone.
 Same firmware as Stationary and Mobile; its first-boot default is Bluetooth
 client access. Because a Bluetooth device has no portal, it boots into the
 **WiFi setup session** until a channel PSK has been saved: join its AP

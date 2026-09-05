@@ -30,11 +30,13 @@ This is the MeshCore fork hosting the RNS gateway role. All work happens in
 - BLE = ble-reticulum peripheral, normative reference is the Python repo
   (torlando-tech/ble-reticulum @ 07d9413); phone apps are conformance
   subjects. Fragment codec is pure and golden-tested.
-- Product variants: Stationary, Mobile, **BLE** (defaults to Bluetooth;
-  boots into the WiFi setup session until a PSK is saved). Same firmware.
-  Boards: Heltec V4 (`heltec_v4_rns_gateway_*`), T-Beam Supreme
-  (`tbeam_supreme_rns_gateway[_ble]`); role flags shared via
-  `variants/rns_gateway/platformio.ini` [rns_gateway_role].
+- Product variants (decided 2026-09-05): **Stationary**, **Mobile WiFi**,
+  **Mobile BLE** (defaults to Bluetooth; boots into the WiFi setup session
+  until a PSK is saved). Same firmware, first-boot defaults differ. Envs
+  `<board>_rns_gateway_{stationary,mobile_wifi,mobile_ble}` for boards
+  `heltec_v4` and `tbeam_supreme`; role flags shared via
+  `variants/rns_gateway/platformio.ini` [rns_gateway_role]. Release assets
+  `rns-gateway-<variant>-<board>-vX.Y.Z.bin`.
 - Logs without serial: portal `/log` serves the slog() ring. Local-ini
   `_ble_dbg` envs keep WiFi up + push UDP logs; `RNS_GW_BLE_DEBUG_WIFI`
   must never ship.
@@ -45,12 +47,10 @@ This is the MeshCore fork hosting the RNS gateway role. All work happens in
 - Prop-restricted variants (same firmware + `RNS_GW_PROP_ONLY`, which forces
   the PropPolicy outbound gate on): `heltec_v4_rns_gateway_prop` /
   `heltec_v4_rns_gateway_b_prop` in `platformio.local.ini`, plus tracked
-  release envs `heltec_v4_rns_gateway_stationary_prop` / `_mobile_prop`.
+  release envs `heltec_v4_rns_gateway_stationary_prop` / `_mobile_wifi_prop`.
   Whitelist is the portal's "Prop destination hashes" field.
-- Release variants (tracked, no secrets, boot AP-first for portal config):
-  `heltec_v4_rns_gateway_stationary` / `heltec_v4_rns_gateway_mobile`.
-  Product naming is **Stationary** and **Mobile** (decided 2026-08-23; avoids
-  colliding with RNS's MODE_ROAMING terminology).
+- Release variants (tracked, no secrets): see "Product variants" above.
+  Naming avoids RNS's MODE_ROAMING terminology (decided 2026-08-23).
 
 ## Gotchas that cost real time (details in project memory)
 - Opening OR closing USB serial **resets the board** (native USB CDC). Any

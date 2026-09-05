@@ -89,4 +89,4 @@ jobs:
           EOF
 
       - name: Build
-        run: pio run -e heltec_v4_rns_gateway -e tbeam_supreme_rns_gateway
+        run: pio run -e heltec_v4_rns_gateway -e tbeam_supreme_rns_gateway_mobile_ble
