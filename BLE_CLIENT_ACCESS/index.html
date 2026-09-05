@@ -1,0 +1,1316 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the open source MeshCore firmware">
+      
+      
+      
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/BLE_CLIENT_ACCESS/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../FIRST_TIME_SETUP/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Bluetooth LE client access - MeshCore Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../_stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bluetooth-le-client-access" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MeshCore Docs" class="md-header__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MeshCore Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Bluetooth LE client access
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MeshCore Docs" class="md-nav__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    MeshCore Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bluetooth LE client access
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bluetooth LE client access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#either-wifi-or-ble-never-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Either WiFi or BLE, never both
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-back-to-the-portal-from-ble-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting back to the portal from BLE mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-logs-without-the-serial-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading logs without the serial port
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-a-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting a client
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bring-up-findings-on-hardware-2026-09-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bring-up findings on hardware (2026-09-05)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-from-the-phase-0-research-2026-09-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Findings from the Phase-0 research (2026-09-04)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIRST_TIME_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First-time setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HALOW_DEPLOYMENT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HaLow deployment for the RNS Gateway
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../companion_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kiss_modem_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MeshCore KISS Modem Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nrf52_power_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nRF52 Power Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../number_allocations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Number Allocations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packet_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packet Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payload Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qr_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stats_binary_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stats Binary Frame Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal_chat_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal Chat CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#either-wifi-or-ble-never-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Either WiFi or BLE, never both
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-back-to-the-portal-from-ble-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting back to the portal from BLE mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-logs-without-the-serial-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading logs without the serial port
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-a-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting a client
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bring-up-findings-on-hardware-2026-09-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bring-up findings on hardware (2026-09-05)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-from-the-phase-0-research-2026-09-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Findings from the Phase-0 research (2026-09-04)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/BLE_CLIENT_ACCESS.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="bluetooth-le-client-access">Bluetooth LE client access</h1>
+<p>The gateway can serve local Reticulum clients over <strong>Bluetooth LE</strong> instead of
+WiFi. Columba on Android and iOS, and a Linux box running the
+<a href="https://github.com/torlando-tech/ble-reticulum"><code>ble-reticulum</code></a> package,
+connect to the device as BLE centrals and reach the MeshCore mesh through the
+gateway's Reticulum transport — same tunnel, same multi-hop behaviour, no WiFi.</p>
+<p>Status (2026-09-05): <strong>running on hardware.</strong> Columba Android connects,
+handshakes, and passes Reticulum packets both ways over BLE; the board is
+bound to the mesh at the same time. See <a href="#milestones">Milestones</a>.</p>
+<h2 id="either-wifi-or-ble-never-both">Either WiFi or BLE, never both</h2>
+<p>Client access is a single setting in the portal, <strong>Client access → WiFi / Bluetooth
+LE</strong>. One is active per boot:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Client path</th>
+<th>WiFi radio</th>
+<th>Portal reachable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WiFi (default)</td>
+<td>AP + station, TCP server on port 4242</td>
+<td>on</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Bluetooth LE</td>
+<td>ble-reticulum peripheral</td>
+<td><strong>never started</strong></td>
+<td>no — see below</td>
+</tr>
+</tbody>
+</table>
+<p>This is deliberate. The S3 shares one 2.4 GHz front end between WiFi and BLE,
+and a site with two client paths lets Reticulum route around the mesh, which
+silently invalidates every multi-hop test. Release builds therefore refuse to
+run both. In BLE mode the WiFi driver is never initialised, so its buffers and
+task are never allocated.</p>
+<h2 id="getting-back-to-the-portal-from-ble-mode">Getting back to the portal from BLE mode</h2>
+<p>In BLE mode there is no WiFi, so there is no portal. Two ways back:</p>
+<ol>
+<li><strong>Hold the PRG button for ten seconds, then release</strong> (display or not).
+   The device reboots into a one-off <em>setup session</em>: the normal WiFi/AP-first
+   boot, portal at <code>http://192.168.4.1/</code> on the device's AP, with the stored
+   configuration untouched. Change what you need and save, or just reboot —
+   the next boot is back in BLE mode unless you switched the setting. The
+   request lives in RTC memory, so it survives the software reset but not a
+   power cycle. Feedback while holding: the TX LED comes on solid at five
+   seconds and blinks at ten; the OLED, if fitted, says which release does
+   what. Releasing between five and ten seconds <strong>powers the device off</strong>
+   instead (MeshCore's deep-sleep power-off; press RST or power-cycle to
+   start it again). Both act on release: PRG is the boot-strapping pin, and
+   resetting while it is held would land in the serial bootloader.</li>
+<li><strong>Reflash.</strong> A <code>/rns_gateway.json</code> written by the portal survives a reflash
+   and keeps its <code>client_access</code>, so reflashing alone does not change mode;
+   use factory reset from a setup session for that.</li>
+</ol>
+<p>If the BLE stack fails to start in BLE mode, the firmware does not sit dark: it
+reboots into the same setup session and says why in the log.</p>
+<h2 id="reading-logs-without-the-serial-port">Reading logs without the serial port</h2>
+<p>Opening <strong>or closing</strong> USB serial resets this board (native USB CDC), so every
+serial read is a reboot. Everything <code>slog()</code> prints is also kept in a 16 KB ring
+in PSRAM, served by the portal at <strong><code>/log</code></strong> (same login as the portal). In
+WiFi mode that is simply the log. In BLE mode WiFi is off, so for bring-up there
+are dedicated builds that keep WiFi up <strong>only</strong> for the portal:</p>
+<table>
+<thead>
+<tr>
+<th>Env</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heltec_v4_rns_gateway_ble_bringup</code></td>
+<td>tracked, no secrets; boots as AP <code>RNSGateway-BLE</code>, client access defaults to BLE, WiFi kept up for <code>/log</code></td>
+</tr>
+<tr>
+<td><code>heltec_v4_rns_gateway_ble_dbg</code> / <code>_b_ble_dbg</code></td>
+<td>in <code>platformio.local.ini</code>; boards A and B with their usual credentials plus the same two flags</td>
+</tr>
+</tbody>
+</table>
+<p>The flags are <code>-D RNS_GW_CLIENT_ACCESS=1</code> (first-boot default = BLE; a stored
+config wins once saved) and <code>-D RNS_GW_BLE_DEBUG_WIFI=1</code> (keep WiFi up in BLE
+mode). The TCP server stays <strong>off</strong> in BLE mode even in these builds, so the
+phone under test still has no path except Bluetooth. <code>RNS_GW_BLE_DEBUG_WIFI</code>
+must never appear in a release env.</p>
+<p>The log carries a <code>[mem]</code> line at boot, after Reticulum starts, after the BLE
+stack starts, and every 60 s: internal heap free / largest block / minimum
+ever, and PSRAM free / largest. Those numbers answer the Bluedroid-fit question
+directly. The 10 s heartbeat gains a <code>[ble]</code> line with packet and fragment
+counters and every drop cause.</p>
+<h2 id="protocol">Protocol</h2>
+<p>The device implements the <strong>peripheral</strong> side of ble-reticulum, wire format
+v2.2 plus the v0.3.0 capability advertisement. The normative reference is the
+Python implementation, commit <code>07d9413</code>; the phone apps are conformance
+subjects against it.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service UUID</td>
+<td><code>37145b00-442d-4a94-917f-8f42c5da28e3</code></td>
+</tr>
+<tr>
+<td>RX (central → device)</td>
+<td><code>…28e5</code>, WRITE and WRITE_WITHOUT_RESPONSE</td>
+</tr>
+<tr>
+<td>TX (device → central)</td>
+<td><code>…28e4</code>, READ and NOTIFY with CCCD</td>
+</tr>
+<tr>
+<td>Identity</td>
+<td><code>…28e6</code>, READ, 16 bytes: the gateway's Transport identity hash</td>
+</tr>
+<tr>
+<td>Advertising</td>
+<td>flags + complete 128-bit service UUID + manufacturer data <code>FF FF 03 01</code> (company 0xFFFF, protocol 0x03, PERIPHERAL_ONLY); name <code>RNS-&lt;8 hex&gt;</code> in the scan response</td>
+</tr>
+<tr>
+<td>Handshake</td>
+<td>the first write to RX is exactly 16 bytes — the central's Transport identity hash. Anything else before that is dropped. No pairing, no bonding.</td>
+</tr>
+<tr>
+<td>Fragments</td>
+<td>5-byte header <code>[type u8][seq u16 BE][total u16 BE]</code>, types START 0x01 / CONTINUE 0x02 / END 0x03; a lone fragment is START with total 1. Payload per fragment = fragment size − 5.</td>
+</tr>
+<tr>
+<td>Sizing</td>
+<td>our notifications use fragment size = negotiated ATT MTU − 3; we offer ATT MTU 517. Received fragments of any size up to 520 bytes are accepted (long writes included).</td>
+</tr>
+<tr>
+<td>RNS interface</td>
+<td><code>HW_MTU</code> 500, <code>FIXED_MTU</code>, bitrate 62 500, <code>MODE_GATEWAY</code>, echo prevention by source connection</td>
+</tr>
+<tr>
+<td>Clients</td>
+<td>up to 3 concurrent centrals, each with its own identity and reassembler</td>
+</tr>
+</tbody>
+</table>
+<p>The codec (<code>BleFragmentation.h/.cpp</code>) is pure logic with golden tests in
+<code>test/host/test_ble_fragmentation.cpp</code>, run by <code>scripts/run_host_tests.sh</code>.
+The tests pin the reference's reassembly semantics, including its quirks
+(sequence 0 always restarts the packet, so fragments before START are lost),
+and the two places we are stricter: a packet over 500 bytes is dropped whole,
+never truncated, and <code>total</code> is capped at 64 fragments.</p>
+<h2 id="connecting-a-client">Connecting a client</h2>
+<p><strong>Linux reference (the conformance gate).</strong> Install ble-reticulum per its
+README, then in <code>~/.reticulum/config</code>:</p>
+<pre><code>[[BLE Interface]]
+  type = BLEInterface
+  enabled = yes
+  # Central only: the gateway cannot connect out, so advertising here
+  # only adds noise to the test.
+  enable_peripheral = no
+  enable_central = yes
+  # min_rssi = -85
+</code></pre>
+<p><code>rnsd --verbose</code> should discover the gateway by service UUID, read its
+identity, write its own, and <code>rnstatus</code> should list a BLE peer interface.</p>
+<p>The reference decides connection direction by address order (lower
+initiates) and does not implement the v0.3.0 PERIPHERAL_ONLY flag; the
+gateway sidesteps that by advertising from <code>ff:ff:ff:…</code>, which sorts above
+any adapter. See finding 7. If the reference still logs "they initiate" at
+DEBUG level, the random static address did not take — check the
+<code>[BleIF] advertising … from random static</code> log line.</p>
+<p>Do <strong>not</strong> have any other interface enabled that could reach the far site
+(AutoInterface on a shared LAN, a shared TCP peer) or the multi-hop test
+proves nothing — confirm with <code>rnpath</code>.</p>
+<p><strong>Columba Android.</strong> Add an <em>AndroidBLE</em> interface in Interface Management
+and enable it (BLE is off by default; the app asks for Bluetooth permissions).
+The shipping Kotlin backend uses reticulum-kt, whose fragmenter matches the
+reference byte for byte.</p>
+<p><strong>Columba iOS.</strong> Experimental. The shipping (embedded-Python) build has working
+BLE through its SwiftBLEBridge; the native ReticulumSwift build does not yet.</p>
+<h2 id="bring-up-findings-on-hardware-2026-09-05">Bring-up findings on hardware (2026-09-05)</h2>
+<ol>
+<li><strong>WiFi + BLE together requires WiFi modem sleep, or the BLE controller
+   aborts.</strong> <code>esp_bt_controller_enable()</code> → <code>coex_enable()</code> →
+   <code>coex_core_enable()</code> calls <code>abort()</code> when the WiFi driver is running with
+   power save off, which <code>wifi_begin()</code> sets deliberately. Board C
+   crash-looped on every boot until the bring-up build re-enabled modem
+   sleep just before <code>BleInterface::start()</code>. Release BLE mode never starts
+   WiFi and is unaffected.</li>
+<li><strong>Under modem sleep the station is half-dead</strong>, the same failure this
+   project documented for AP+STA: it answers mDNS multicast and drops most
+   inbound unicast, so <code>/log</code> could not be fetched and neither could the AP
+   address. Outbound traffic is fine, so bring-up logging is now pushed as
+   UDP datagrams to a host (<code>UdpLog.h</code>, <code>RNS_GW_UDP_LOG_HOST</code>, listen with
+   <code>nc -ul 5140</code>). The <code>/log</code> endpoint remains useful in WiFi mode.</li>
+<li>A static-filled OLED on this build was the crash loop, not the display:
+   the panel initialised and the task that draws on it died before its first
+   frame.</li>
+<li>USB serial on the S3 re-enumerates across the reset that opening the port
+   causes; a capture has to reopen the device after it comes back.</li>
+</ol>
+<h2 id="findings-from-the-phase-0-research-2026-09-04">Findings from the Phase-0 research (2026-09-04)</h2>
+<p>Nothing here blocks interop; each is either a documented quirk or something
+to raise upstream. None is worked around silently.</p>
+<ol>
+<li><strong>The reference's <code>mtu</code> is the ATT MTU, and it does not subtract the 3-byte
+   ATT header.</strong> <code>BLEFragmenter(mtu=517)</code> builds 517-byte fragments; those
+   only fit a GATT <em>long write</em>, not a notification (max ATT MTU − 3 = 514).
+   As a central, BlueZ long-writes them and we reassemble the value whole, so
+   it works. As a peripheral the reference would have BlueZ truncate its own
+   notifications at large MTUs — not our case, but worth an upstream note.
+   Both phone shims size from the usable length (ATT MTU − 3) instead, which is
+   what this firmware does.</li>
+<li><strong>Columba Android ignores the v0.3.0 PERIPHERAL_ONLY flag</strong> and still applies
+   the v2.2 MAC-sorting rule (<code>KotlinBLEBridge.shouldConnect</code>, local MAC &lt;
+   peer MAC ⇒ connect). Android hides the phone's real MAC from apps and
+   returns <code>02:00:00:00:00:00</code>, so in practice the phone always sorts lower
+   than an Espressif address and always initiates — the right outcome by
+   accident. We advertise the flag anyway (harmless to v2.2 centrals, correct
+   for v0.3.0 ones). Upstream should honour the flag.</li>
+<li><strong>Columba's <code>BleConstants.kt</code> defines a fragment type <code>LONE = 0x00</code></strong> that
+   neither reticulum-kt nor the reference ever emits, and both reassemblers
+   reject. Dead constant; our reassembler rejects 0x00 too and counts it.</li>
+<li><strong>No keepalive exists in the protocol.</strong> Unlike the TCP interface there is no
+   idle reaper here either: the BLE link layer's supervision timeout reports a
+   vanished central as a disconnect.</li>
+<li><strong>iOS cannot see MACs</strong> and returns a zero sentinel; its role resolution is
+   post-connect by identity. It connects to any advertiser with the service
+   UUID, which is all a peripheral-only device needs.</li>
+<li>The rejected "real TCP over Bluetooth" idea was re-checked and stays
+   rejected: the S3 has no Classic BT (no PAN/RFCOMM), neither phone OS
+   exposes IPSP/6LoWPAN, iOS non-GATT transport needs MFi, and Android's
+   L2CAP CoC (API 29+) is a raw byte stream, not a socket.</li>
+<li><strong>The v2.2 MAC-sorting rule can deadlock a peripheral-only gateway against
+   the Linux reference</strong> (finding 2 is the same rule on Android, where the
+   fake <code>02:00:00:00:00:00</code> local address happens to make it harmless). The
+   reference has no flag support and no config override (<code>enable_central</code>
+   only turns scanning on or off). This is precisely the problem v0.3.0 was
+   written to fix, and it is unfixed in the reference. <strong>Resolved on the
+   gateway side (2026-09-04):</strong> the device advertises from a BLE <em>random
+   static</em> address <code>ff:ff:ff:xx:xx:xx</code> (low bytes from the identity, so it
+   is stable across reboots), which sorts above every assigned OUI. Under
+   v2.2 the higher address never initiates, which is exactly what a
+   peripheral-only device wants: every central concludes it must connect.
+   Protocol-conformant, and the BLE address is not part of the Reticulum
+   identity. Columba was fine either way (Android's fake local MAC sorts
+   lowest; iOS never compares). Implementing the flag upstream remains the
+   right long-term fix and is worth an issue on ble-reticulum.</li>
+</ol>
+<h2 id="milestones">Milestones</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Gate</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BLE stack up in BLE mode with WiFi down; heap figures at boot and every 60 s; logs readable without serial</td>
+<td><strong>passed 2026-09-05 on board C</strong>: advertising, nRF Connect connects with no PIN, identity reads back, OLED shows <code>CLI 1/3</code>. Bluedroid costs ~60 KB of internal heap (151 KB → 90 KB free with WiFi also up); ~150 KB free in real BLE mode.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>BleInterface, fragmentation codec with golden tests, mode either/or, path back to portal</td>
+<td>built; portal WiFi→BLE switch <strong>observed</strong> (save turned WiFi off, board came up in BLE mode). PRG path back not yet exercised.</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Linux ble-reticulum ↔ gateway passes RNS traffic</td>
+<td>not run — Columba is the target; Linux box optional</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>LXMF to a destination on the far side of the tunnel, multiple hops confirmed</td>
+<td>pending</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>Columba Android connects, handshakes, passes traffic</td>
+<td><strong>passed 2026-09-05</strong>: <code>BLERX</code>/<code>BLETX</code> both climbing with the shipping Kotlin backend, no app-side or gateway-side workaround</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>WiFi → BLE → WiFi via portal, no reflash</td>
+<td>pending</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Columba iOS</td>
+<td>pending</td>
+</tr>
+</tbody>
+</table>
+<p>Static build figures, 2026-09-04 (<code>heltec_v4_rns_gateway_stationary</code>, same
+firmware either way — the BLE code is always compiled in):</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>before BLE</th>
+<th>with BLE</th>
+<th>delta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>static RAM (data + bss)</td>
+<td>87,552</td>
+<td>108,496</td>
+<td>+20,944</td>
+</tr>
+<tr>
+<td>flash</td>
+<td>1,389,589</td>
+<td>1,970,385</td>
+<td>+580,796</td>
+</tr>
+</tbody>
+</table>
+<p>The static RAM growth is the Bluedroid host's own tables plus this role's
+queues (6 × 524-byte RX items, event queue). The runtime cost — controller
+and host heap, task stacks in internal RAM — is what <code>[mem] after BLE start</code>
+will report; nothing is known about it until a board runs this.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.action.edit", "content.code.copy", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
