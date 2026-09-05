@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Host golden tests for the tunnel's pure code (no MCU required):
-# MeshCoreTunnelCodec and PropPolicy.
+# MeshCoreTunnelCodec, PropPolicy and the BLE fragment codec.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "${ROOT}/.pio"
@@ -19,5 +19,13 @@ c++ -std=c++17 -Wall -Wextra -O0 \
   "${ROOT}/test/host/test_prop_policy.cpp" \
   "${ROOT}/examples/rns_gateway/PropPolicy.cpp" \
   "${ROOT}/examples/rns_gateway/MeshCoreTunnelCodec.cpp" \
+  -o "${OUT}"
+"${OUT}"
+
+OUT="${ROOT}/.pio/host_test_ble_fragmentation"
+c++ -std=c++17 -Wall -Wextra -O0 \
+  -I "${ROOT}/examples/rns_gateway" \
+  "${ROOT}/test/host/test_ble_fragmentation.cpp" \
+  "${ROOT}/examples/rns_gateway/BleFragmentation.cpp" \
   -o "${OUT}"
 "${OUT}"

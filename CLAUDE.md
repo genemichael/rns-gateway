@@ -14,9 +14,25 @@ This is the MeshCore fork hosting the RNS gateway role. All work happens in
 
 ## Layout
 - Role code: `examples/rns_gateway/` (main.cpp, MyMesh, MeshCoreInterface,
-  TcpInterface, ConfigPortal, GatewayConfig, SerialLog)
+  TcpInterface, BleInterface + BleFragmentation, ConfigPortal, GatewayConfig,
+  SerialLog, StatusScreen)
 - Host tests: `./scripts/run_host_tests.sh` (no hardware needed)
-- Spec: `../FORK_BRIEF.md`
+- Spec: `../FORK_BRIEF.md`; BLE client access: `docs/BLE_CLIENT_ACCESS.md`
+
+## Client access: WiFi or BLE (either/or)
+- Portal setting `client_access` (GatewayConfig). BLE mode never starts
+  WiFi. PRG held 10 s then released = one-off WiFi setup session (RTC
+  flag); held 5 s then released = power off. Gestures act on RELEASE only
+  (GPIO0 is the strapping pin).
+- WiFi + BLE together (bring-up builds only) REQUIRES WiFi modem sleep or
+  the BLE controller aborts in coex_core_enable; under modem sleep inbound
+  unicast is unreliable, so bring-up logs are pushed over UDP (UdpLog.h).
+- BLE = ble-reticulum peripheral, normative reference is the Python repo
+  (torlando-tech/ble-reticulum @ 07d9413); phone apps are conformance
+  subjects. Fragment codec is pure and golden-tested.
+- Logs without serial: portal `/log` serves the slog() ring. BLE bring-up
+  envs (`_ble_bringup` tracked, `_ble_dbg` local) keep WiFi up for it only;
+  `RNS_GW_BLE_DEBUG_WIFI` must never ship.
 
 ## Build / flash
 - Board A (station + AP): `pio run -e heltec_v4_rns_gateway -t upload`

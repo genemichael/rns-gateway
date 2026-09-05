@@ -9,6 +9,12 @@
  *                                peered with one shared rnsd, Reticulum would
  *                                route around the mesh entirely and the
  *                                end-to-end test would prove nothing.
+ *            — or —
+ *            BleInterface      — ble-reticulum peripheral. Phones (Columba)
+ *                                and a Linux box connect in over Bluetooth
+ *                                LE. Either/or with the TCP server, chosen in
+ *                                the portal ("Client access"); in BLE mode
+ *                                the WiFi radio is never started.
  *   iface B  MeshCoreInterface — the MeshCore mesh, in-process. MODE_BOUNDARY
  *                                so announces cross into the tunnel (AP on
  *                                both sides blocks every announce; GATEWAY
@@ -33,6 +39,10 @@
 #include "ConfigPortal.h"
 #include "MeshCoreInterface.h"
 #include "TcpInterface.h"
+#include "BleInterface.h"
+#include "UdpLog.h"
+#include <esp_attr.h>
+#include <esp_heap_caps.h>
 
 #include <Mesh.h>
 #include "MyMesh.h"
@@ -70,6 +80,17 @@
 #define RNS_TASK_PRIORITY   2
 #define RNS_TASK_CORE       0
 #define WIFI_RETRY_MILLIS   10000
+// Heap report cadence. In BLE mode this is the Milestone-1 fit question
+// answered live: internal heap with Bluedroid up, every minute, via /log.
+#define MEM_REPORT_MILLIS   60000
+// Bring-up builds keep WiFi (and so the portal's /log) up alongside BLE.
+// Never in a release image: two client paths would let Reticulum route
+// around the mesh and invalidate the multi-hop test.
+#ifdef RNS_GW_BLE_DEBUG_WIFI
+  #define BLE_DEBUG_WIFI 1
+#else
+  #define BLE_DEBUG_WIFI 0
+#endif
 // How long to wait for the station to associate before raising the AP, so the
 // AP can be born on the station's channel instead of being dragged to it later.
 #define WIFI_STA_INITIAL_WAIT_MS  15000
@@ -84,8 +105,31 @@ static MeshCoreInterface*  _mc_impl = NULL;
 static RNS::Interface*     _mc_iface = NULL;
 static TcpInterface*       _tcp_impl = NULL;
 static RNS::Interface*     _tcp_iface = NULL;
+static BleInterface*       _ble_impl = NULL;
+static RNS::Interface*     _ble_iface = NULL;
 static volatile bool       _sta_up = false;   // station associated
 static volatile bool       _ap_up  = false;   // softAP raised
+
+// ── Client-access mode and the way back from BLE ─────────────────────────────
+// In BLE mode WiFi is off, so the portal is unreachable — and a device you
+// cannot reconfigure is a brick with a radio. Holding PRG for ten seconds
+// sets a flag in RTC memory (survives ESP.restart(), not power-off) and
+// reboots; the next boot honours the flag ONCE and runs the normal
+// WiFi/AP-first setup session with the stored config untouched. A plain
+// reboot after that is back in BLE mode. The same path is the fail-safe if
+// the BLE stack will not start: rather than sit unreachable, reboot into
+// setup. Holding for five seconds instead powers the device off (MeshCore's
+// powerOff(): deep sleep, RST or a power cycle brings it back).
+//
+// Both gestures fire on RELEASE, never while the button is still down:
+// PRG is GPIO0, the boot-strapping pin, and a reset while it is held drops
+// the S3 into the serial bootloader instead of our firmware.
+#define HOLD_POWEROFF_MS   5000
+#define HOLD_SETUP_MS     10000
+#define SETUP_BOOT_MAGIC  0x53455455u   // 'SETU'
+RTC_NOINIT_ATTR static uint32_t g_setup_boot_flag;
+static bool g_setup_session = false;   // this boot: WiFi setup despite BLE config
+static bool g_ble_mode      = false;   // this boot: BLE client access
 
 static GatewayConfig g_cfg;
 #ifdef DISPLAY_CLASS
@@ -127,6 +171,84 @@ static bool portal_apply_radio(float freq, float bw, uint8_t sf,
 
 void halt() {
   while (1) ;
+}
+
+static void mem_report(const char* tag) {
+  slog("[mem] %s: internal free=%u largest=%u min_ever=%u | psram free=%u largest=%u\r\n",
+       tag,
+       (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+       (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+       (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+       (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+       (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+}
+
+static void reboot_into_setup_session(const char* why) {
+  slog("[cfg] %s — rebooting into a one-off WiFi setup session (stored config unchanged)\r\n", why);
+  g_setup_boot_flag = SETUP_BOOT_MAGIC;
+  delay(300);
+  ESP.restart();
+}
+
+static void gateway_power_off() {
+  slogln("[cfg] PRG held 5 s — powering off (RST or power cycle to restart)");
+#ifdef DISPLAY_CLASS
+  if (g_screen_ok) g_screen.showNotice("POWERING OFF", "RST to restart");
+#endif
+  delay(600);
+  board.powerOff();          // deep sleep, no wake source — never returns
+}
+
+// PRG hold tracker, polled from the RNS task. Feedback while held so the
+// user knows which threshold they have crossed without a working display:
+// the TX LED comes on solid at 5 s (release = power off) and blinks at
+// 10 s (release = WiFi setup session). Sub-5 s holds are left to the
+// screen's own click/long-press handling.
+static void service_hold_gesture(uint32_t now) {
+  static uint32_t down_since = 0;
+  static uint8_t  stage = 0;          // 0 none, 1 >=5 s, 2 >=10 s
+  static uint32_t last_blink = 0;
+  static bool     led_on = false;
+
+  bool pressed = user_btn.isPressed();
+  if (pressed) {
+    if (down_since == 0) { down_since = now; stage = 0; }
+    uint32_t held = now - down_since;
+    if (stage == 0 && held >= HOLD_POWEROFF_MS) {
+      stage = 1;
+      digitalWrite(P_LORA_TX_LED, HIGH); led_on = true;
+#ifdef DISPLAY_CLASS
+      if (g_screen_ok) g_screen.showNotice("Release: POWER OFF", "Hold on: WiFi setup");
+#endif
+    }
+    if (stage == 1 && held >= HOLD_SETUP_MS) {
+      stage = 2;
+#ifdef DISPLAY_CLASS
+      if (g_screen_ok) g_screen.showNotice("Release: WIFI SETUP", "(config unchanged)");
+#endif
+    }
+    if (stage == 2 && (now - last_blink) >= 150) {
+      last_blink = now;
+      led_on = !led_on;
+      digitalWrite(P_LORA_TX_LED, led_on ? HIGH : LOW);
+    }
+    return;
+  }
+
+  if (down_since == 0) return;        // nothing was in progress
+  uint32_t held = now - down_since;
+  down_since = 0;
+  digitalWrite(P_LORA_TX_LED, LOW); led_on = false;
+  if (stage == 2 || held >= HOLD_SETUP_MS) {
+    reboot_into_setup_session("PRG held 10 s");
+  } else if (stage == 1 || held >= HOLD_POWEROFF_MS) {
+    gateway_power_off();
+  } else {
+#ifdef DISPLAY_CLASS
+    if (g_screen_ok) g_screen.clearNotice();
+#endif
+  }
+  stage = 0;
 }
 
 static char command[160];
@@ -246,7 +368,19 @@ static void rns_task(void* arg) {
   static microStore::Adapters::SPIFFSFileSystem rns_fs;
   RNS::Utilities::OS::register_filesystem(rns_fs);
 
-  wifi_begin();
+  if (!g_ble_mode || BLE_DEBUG_WIFI) {
+    wifi_begin();
+  } else {
+    // Never brought up, not shut down: the driver is simply never
+    // initialised, so its buffers and task are never allocated.
+    WiFi.mode(WIFI_OFF);
+    slogln("[wifi] off — client access is Bluetooth");
+  }
+
+  // Bring-up log push starts the moment the station has an address, so the
+  // BLE start lines below reach the desk. No-op unless RNS_GW_UDP_LOG_HOST.
+  bool udplog_started = false;
+  if (_sta_up) { udplog_begin(); udplog_started = true; }
 
   // The portal (and mDNS with it) comes up as soon as ANY network exists —
   // before Reticulum, so a node with a broken RNS config is still
@@ -304,7 +438,12 @@ static void rns_task(void* arg) {
   // exists, but the listening socket only opens once a link is actually up —
   // WiFiServer::begin() on a down interface binds to nothing useful.
   bool tcp_started = false;
-  if (g_cfg.tcp_enabled) {
+  if (g_ble_mode) {
+    // Bluetooth is the client path. The TCP server stays off even in
+    // bring-up builds that keep WiFi up for /log, so the phone under test
+    // never has a second way in.
+    slogln("RNS: TCP client access off (Bluetooth mode)");
+  } else if (g_cfg.tcp_enabled) {
     _tcp_impl = new TcpInterface(TCP_IF_MODE_SERVER, g_cfg.tcp_port,
                                  NULL, 0, "tcp0");
     _tcp_iface = new RNS::Interface(_tcp_impl);
@@ -349,25 +488,82 @@ static void rns_task(void* arg) {
     slogln("RNS: TCP client access disabled in config");
   }
 
+  if (g_ble_mode) {
+    // Registered before Reticulum starts, like the TCP interface, so
+    // Transport knows it exists; started AFTER, because the Identity
+    // characteristic is backed by Transport's identity. Same MODE_GATEWAY
+    // reasoning as above — BLE clients are remote interfaces too.
+    _ble_impl = new BleInterface("ble0");
+    _ble_iface = new RNS::Interface(_ble_impl);
+    _ble_iface->mode(RNS::Type::Interface::MODE_GATEWAY);
+    RNS::Transport::register_interface(*_ble_iface);
+  }
+
   _reticulum->transport_enabled(true);
   _reticulum->start();
+  mem_report("after RNS start");
+
+  bool ble_started = false;
+  if (g_ble_mode) {
+    if (BLE_DEBUG_WIFI) {
+      // Bring-up builds run both radios. The ESP32 coexistence module
+      // REQUIRES WiFi modem sleep when the BLE controller is enabled:
+      // esp_bt_controller_enable() -> coex_enable() -> coex_core_enable()
+      // aborts outright otherwise (observed on board C, 2026-09-05 — the
+      // node crash-looped on every boot). wifi_begin() had turned sleep
+      // off for good reasons; put it back before the controller starts.
+      // The cost is the known half-dead station: inbound unicast becomes
+      // unreliable, which is why bring-up logging is pushed over UDP
+      // (UdpLog.h) rather than fetched from /log.
+      WiFi.setSleep(true);
+      slogln("[wifi] modem sleep ON — required for BLE coexistence (bring-up build)");
+    }
+    ble_started = _ble_impl->start();
+    if (ble_started) {
+      g_portal.setBleName(_ble_impl->deviceName());
+      mem_report("after BLE start");
+    } else {
+      slogln("RNS: *** BLE stack failed to start ***");
+      if (!BLE_DEBUG_WIFI) {
+        // Unreachable otherwise: no WiFi, no BLE. Fail into the setup
+        // session instead of sitting dark.
+        reboot_into_setup_session("BLE failed to start");
+      }
+    }
+  }
 
 #ifdef DISPLAY_CLASS
   if (g_screen_ok) {
-    g_screen.begin(_mc_impl, _tcp_impl, &board, the_mesh.getNodePrefs());
+    g_screen.begin(_mc_impl, g_ble_mode ? NULL : _tcp_impl,
+                   g_ble_mode ? _ble_impl : NULL, &board, the_mesh.getNodePrefs());
   }
 #endif
+  unsigned long last_mem = millis();
 
   while (true) {
     service_wifi(last_retry);
 
 #ifdef DISPLAY_CLASS
-    g_screen.loop();
+    if (g_screen_ok) {
+      g_screen.loop();
+    } else {
+      user_btn.check();   // keep the debounce state machine advancing
+    }
 #endif
+    service_hold_gesture(millis());
+
+    if ((millis() - last_mem) >= MEM_REPORT_MILLIS) {
+      last_mem = millis();
+      mem_report("periodic");
+    }
 
     if (!portal_started && net_up()) {
       g_portal.begin(g_cfg, portal_read_radio, portal_apply_radio);
       portal_started = true;
+    }
+    if (!udplog_started && _sta_up) {
+      udplog_begin();
+      udplog_started = true;
     }
 
     if (_tcp_impl && !tcp_started && net_up()) {
@@ -393,6 +589,7 @@ static void rns_task(void* arg) {
     _reticulum->loop();
     _mc_impl->loop();
     if (tcp_started) _tcp_impl->loop();
+    if (ble_started) _ble_impl->loop();
 
     vTaskDelay(pdMS_TO_TICKS(5));
   }
@@ -459,6 +656,18 @@ void setup() {
   the_mesh.setBridgeChannel(g_cfg.chan_name, g_cfg.chan_psk);
   the_mesh.setTunnelFlood(g_cfg.tunnel_flood);
 
+  // One-shot setup session requested by the previous boot (PRG hold, or a
+  // BLE start failure). Consumed here so the boot after it is normal again.
+  if (g_setup_boot_flag == SETUP_BOOT_MAGIC) {
+    g_setup_boot_flag = 0;
+    g_setup_session = true;
+  }
+  g_ble_mode = g_cfg.bleMode() && !g_setup_session;
+  slog("[cfg] client access: %s%s%s\r\n",
+       g_ble_mode ? "Bluetooth LE" : "WiFi",
+       g_setup_session ? " (SETUP SESSION — stored config says Bluetooth; WiFi for this boot only)" : "",
+       (g_ble_mode && BLE_DEBUG_WIFI) ? " + WiFi kept up for /log (bring-up build)" : "");
+
   IdentityStore store(SPIFFS, "/identity");
 #else
   #error "RNS gateway targets ESP32 only"
@@ -491,14 +700,17 @@ void setup() {
   // Probe fails harmlessly on boards with no OLED fitted; the screen (and
   // the PRG button driver) then stay dormant for the whole run. Serviced
   // from the RNS task, which owns every data source the pages read.
+  // The PRG button is begun regardless of the display: it is the way back
+  // to the portal from BLE mode, display or not.
+  user_btn.begin();
   if (display.begin()) {
-    user_btn.begin();
     g_screen_ok = true;
     slogln("[oled] display up");
   } else {
     slogln("[oled] no display found");
   }
 #endif
+  mem_report("boot");
 
   if (xTaskCreatePinnedToCore(rns_task_guarded, "rns", RNS_TASK_STACK, NULL,
                               RNS_TASK_PRIORITY, NULL, RNS_TASK_CORE) != pdPASS) {
@@ -611,5 +823,16 @@ void loop() {
                   _mc_impl ? _mc_impl->air_shed() : 0,
                   (unsigned)ESP.getFreeHeap(),
                   (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    if (_ble_impl) {
+      // Same idea as tcprx/tcptx: blerx/bletx are whole packets across the
+      // BLE boundary, frx/ftx the fragments that carried them. A client
+      // "send" that never moves blerx never left the phone.
+      slog("[ble] up=%d cli=%d blerx=%u bletx=%u frx=%u ftx=%u drop_q=%u drop_prehs=%u drop_reasm=%u drop_tx=%u\n",
+           _ble_impl->isStarted() ? 1 : 0, _ble_impl->clientCount(),
+           _ble_impl->rx_frames(), _ble_impl->tx_frames(),
+           _ble_impl->rx_fragments(), _ble_impl->tx_fragments(),
+           _ble_impl->drop_queue_full(), _ble_impl->drop_pre_handshake(),
+           _ble_impl->drop_reassembly(), _ble_impl->drop_tx());
+    }
   }
 }

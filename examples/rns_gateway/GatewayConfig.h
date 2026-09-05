@@ -57,8 +57,25 @@
 #ifndef BRIDGE_CHANNEL_PSK
   #define BRIDGE_CHANNEL_PSK   ""
 #endif
+// Client access: how local Reticulum clients reach this device. Either/or,
+// one active at a time — a phone on BLE and a laptop on WiFi at the same
+// site is not a supported configuration (decided 2026-09-04; the two radios
+// share the 2.4 GHz front end, and one client path keeps the multi-hop test
+// honest).
+#define CLIENT_ACCESS_WIFI  0     // today's AP+STA plus the TCP server
+#define CLIENT_ACCESS_BLE   1     // ble-reticulum peripheral; WiFi stays off
+#ifndef RNS_GW_CLIENT_ACCESS
+  #define RNS_GW_CLIENT_ACCESS  CLIENT_ACCESS_WIFI
+#endif
 
 struct GatewayConfig {
+    // ── Client access selector ──────────────────────────────────────────────
+    // CLIENT_ACCESS_WIFI or CLIENT_ACCESS_BLE. In BLE mode the WiFi radio is
+    // never brought up (except in RNS_GW_BLE_DEBUG_WIFI bring-up builds), so
+    // the portal is unreachable; holding PRG for a second reboots into a
+    // one-off WiFi setup session with this setting left untouched.
+    uint8_t  client_access;
+
     // ── WiFi station ────────────────────────────────────────────────────────
     bool     sta_enabled;
     char     sta_ssid[33];
@@ -114,7 +131,11 @@ struct GatewayConfig {
     char     chan_name[32];
     char     chan_psk[45];   // base64 of a 16- or 32-byte key
 
+    bool bleMode() const { return client_access == CLIENT_ACCESS_BLE; }
+
     void setDefaults() {
+        client_access = RNS_GW_CLIENT_ACCESS;
+
         sta_enabled = (sizeof(WIFI_SSID) > 1);
         strlcpy(sta_ssid, WIFI_SSID, sizeof(sta_ssid));
         strlcpy(sta_pwd,  WIFI_PWD,  sizeof(sta_pwd));
@@ -168,6 +189,9 @@ struct GatewayConfig {
             return false;
         }
 
+        client_access = doc["client_access"] | client_access;
+        if (client_access != CLIENT_ACCESS_BLE) client_access = CLIENT_ACCESS_WIFI;
+
         sta_enabled = doc["sta_enabled"] | sta_enabled;
         strlcpy(sta_ssid, doc["sta_ssid"] | sta_ssid, sizeof(sta_ssid));
         strlcpy(sta_pwd,  doc["sta_pwd"]  | sta_pwd,  sizeof(sta_pwd));
@@ -201,6 +225,7 @@ struct GatewayConfig {
 
     bool save() const {
         JsonDocument doc;
+        doc["client_access"] = client_access;
         doc["sta_enabled"]  = sta_enabled;
         doc["sta_ssid"]     = sta_ssid;
         doc["sta_pwd"]      = sta_pwd;

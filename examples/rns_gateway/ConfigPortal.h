@@ -70,6 +70,9 @@ public:
         _server.on("/save",   HTTP_POST, [this]{ handleSave(); });
         _server.on("/reset",  HTTP_POST, [this]{ handleReset(); });
         _server.on("/reboot", HTTP_POST, [this]{ handleReboot(); });
+        // The slog() ring, oldest line first. This is how you read the log
+        // without opening the serial port — which resets the board.
+        _server.on("/log",    HTTP_GET,  [this]{ handleLog(); });
 
         // Captive-portal probes. Each OS uses its own URL and decides "this
         // network needs sign-in" from the response; redirecting them all to /
@@ -115,7 +118,7 @@ public:
             return;
         }
         MDNS.addService("http", "tcp", PORTAL_HTTP_PORT);
-        if (_cfg->tcp_enabled) {
+        if (_cfg->tcp_enabled && !_cfg->bleMode()) {
             // Advertised so a client can find the RNS interface by name rather
             // than by a DHCP address that changes on every reconnect.
             MDNS.addService("reticulum", "tcp", _cfg->tcp_port);
@@ -219,17 +222,47 @@ private:
         ));
 
         // ── Client connection details, first: this is the thing people need ──
-        _server.sendContent(F("<h2>Connect a Reticulum client</h2>"
-                              "<p class='note'>Add this to your client's config:</p><pre>"));
-        _server.sendContent("[[RNS Gateway]]\n  type = TCPClientInterface\n"
-                            "  enabled = yes\n  target_host = " + esc(clientTarget().c_str()) +
-                            "\n  target_port = " + String(_cfg->tcp_port) + "\n");
-        _server.sendContent(F("</pre>"));
-        if (_sta_ip().length()) {
-            _server.sendContent("<p class='note'>Station address right now: " +
-                                esc(_sta_ip().c_str()) +
-                                " (DHCP — prefer the mDNS name above).</p>");
+        _server.sendContent(F("<h2>Connect a Reticulum client</h2>"));
+        if (_cfg->bleMode()) {
+            _server.sendContent(F("<p class='note'>Client access is <b>Bluetooth</b>. "
+                                  "Connect from Columba (Android/iOS) or a Linux box running "
+                                  "<code>ble-reticulum</code>: the device advertises the "
+                                  "Reticulum BLE service and shows up as "));
+            _server.sendContent("<b>" + esc(_ble_name ? _ble_name : "RNS-…") + "</b>. "
+                                "No pairing. WiFi is off in this mode; this portal is only "
+                                "reachable in a setup session (hold PRG for 10 s, then release) "
+                                "or a bring-up build.</p>");
+        } else {
+            _server.sendContent(F("<p class='note'>Add this to your client's config:</p><pre>"));
+            _server.sendContent("[[RNS Gateway]]\n  type = TCPClientInterface\n"
+                                "  enabled = yes\n  target_host = " + esc(clientTarget().c_str()) +
+                                "\n  target_port = " + String(_cfg->tcp_port) + "\n");
+            _server.sendContent(F("</pre>"));
+            if (_sta_ip().length()) {
+                _server.sendContent("<p class='note'>Station address right now: " +
+                                    esc(_sta_ip().c_str()) +
+                                    " (DHCP — prefer the mDNS name above).</p>");
+            }
         }
+        _server.sendContent(F("<p class='note'><a href='/log' style='color:#8bd'>View device log</a></p>"));
+
+        // ── Client access: WiFi or BLE ──────────────────────────────────────
+        _server.sendContent(F("<h2>Client access</h2>"
+                              "<label for='client_access'>Radio clients connect over</label>"
+                              "<select id='client_access' name='client_access' "
+                              "style='width:100%;padding:.45rem;background:#1c1c1c;color:#eee;"
+                              "border:1px solid #444;border-radius:4px'>"));
+        _server.sendContent(String(F("<option value='0'")) + (_cfg->bleMode() ? "" : " selected") +
+                            ">WiFi (access point / station + TCP server)</option>" +
+                            "<option value='1'" + (_cfg->bleMode() ? " selected" : "") +
+                            ">Bluetooth LE (ble-reticulum, Columba)</option></select>");
+        _server.sendContent(F("<p class='note'>One at a time. In Bluetooth mode WiFi is "
+                              "never started, so this portal goes away after reboot: to "
+                              "come back here, hold the PRG button for ten seconds and "
+                              "release — the device reboots into a WiFi setup session with "
+                              "your settings unchanged, and returns to Bluetooth on the next "
+                              "reboot. Holding for five seconds and releasing powers it "
+                              "off instead (RST to restart).</p>"));
 
         // ── WiFi station ────────────────────────────────────────────────────
         _server.sendContent(F("<h2>WiFi station</h2>"));
@@ -320,6 +353,11 @@ private:
         if (denied()) return;
         GatewayConfig& c = *_cfg;
 
+        if (_server.hasArg("client_access")) {
+            long v = _server.arg("client_access").toInt();
+            c.client_access = (v == CLIENT_ACCESS_BLE) ? CLIENT_ACCESS_BLE : CLIENT_ACCESS_WIFI;
+        }
+
         // Checkboxes only appear in the POST body when ticked.
         c.sta_enabled  = _server.hasArg("sta_en");
         c.ap_enabled   = _server.hasArg("ap_en");
@@ -383,6 +421,11 @@ private:
         if (cfg_ok && radio_ok) {
             body += F("<h2>Saved</h2><p>Rebooting. If you changed the AP settings "
                       "you will need to rejoin the new network.</p>");
+            if (c.bleMode()) {
+                body += F("<p><b>Client access is now Bluetooth.</b> WiFi will be off "
+                          "after this reboot and this page will not be reachable. "
+                          "To reconfigure later, hold PRG for ten seconds and release.</p>");
+            }
         } else {
             body += F("<h2>Partly saved</h2><p>");
             if (!cfg_ok)   body += F("Writing the config file failed. ");
@@ -410,6 +453,35 @@ private:
         _server.send(200, "text/plain", "Rebooting");
         deferredReboot();
     }
+
+    // Serve the slog() ring as plain text. Snapshot under the lock into a
+    // PSRAM buffer, then stream it — the lock must not be held across a
+    // TCP write, which can block on a slow client.
+    void handleLog() {
+        if (denied()) return;
+        size_t cap = slog_ring_capacity() + 1;
+        char* buf = (char*)heap_caps_malloc(cap, MALLOC_CAP_SPIRAM);
+        if (!buf) buf = (char*)malloc(cap);
+        if (!buf) {
+            _server.send(503, "text/plain", "no memory for log snapshot");
+            return;
+        }
+        size_t n = slog_ring_read(buf, cap);
+        _server.setContentLength(n);
+        _server.send(200, "text/plain; charset=utf-8", "");
+        for (size_t off = 0; off < n; off += 1024) {
+            size_t chunk = (n - off < 1024) ? (n - off) : 1024;
+            _server.sendContent(buf + off, chunk);
+        }
+        free(buf);
+    }
+
+public:
+    // Shown on the front page in BLE mode so the user knows what to look for
+    // in a scanner. Set by main once the BLE interface is up.
+    void setBleName(const char* name) { _ble_name = name; }
+
+private:
 
     // Let the response actually reach the browser before the reset.
     void deferredReboot() {
@@ -456,6 +528,7 @@ private:
     RadioApplyFn   _apply_radio;
     bool           _dns_active;
     bool           _started;
+    const char*    _ble_name = nullptr;
 };
 
 #endif // RNS_GATEWAY_CONFIG_PORTAL_H

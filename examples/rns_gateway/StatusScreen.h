@@ -13,9 +13,10 @@
  * a fresh device literally displays its own first-boot instructions.
  *
  * Sleep: blanks after DISPLAY_TIMEOUT_MS (60 s); any PRG press wakes it.
- * A press while awake advances the page. No BT indicator: this firmware
- * has no Bluetooth, and a dead icon would be a lie — the corner shows
- * battery instead.
+ * A press while awake advances the page. Long holds (5 s power off, 10 s
+ * WiFi setup session) are tracked by main, which uses showNotice() here for
+ * feedback. The corner shows battery, not a BT icon: in BLE mode the STATUS
+ * page says so in words instead.
  *
  * Deliberately NOT MeshCore's message/announce screens: the gateway cannot
  * read tunnel content (opaque encrypted RNS) and does not participate in
@@ -38,6 +39,7 @@
 #include "GatewayConfig.h"
 #include "MeshCoreInterface.h"
 #include "TcpInterface.h"
+#include "BleInterface.h"
 
 #ifndef RNS_GW_VARIANT_NAME
   #define RNS_GW_VARIANT_NAME "GATEWAY"
@@ -52,13 +54,27 @@ public:
     StatusScreen(DisplayDriver& disp, MomentaryButton& btn, GatewayConfig& cfg)
         : _disp(disp), _cfg(cfg), _btn(btn) {}
 
-    // Call once from setup, after display.begin() succeeded.
-    void begin(MeshCoreInterface* mc, TcpInterface* tcp,
+    // Call once from setup, after display.begin() succeeded. Exactly one of
+    // tcp/ble is non-null, matching the configured client access.
+    void begin(MeshCoreInterface* mc, TcpInterface* tcp, BleInterface* ble,
                mesh::MainBoard* board, NodePrefs* prefs) {
-        _mc = mc; _tcp = tcp; _board = board; _prefs = prefs;
+        _mc = mc; _tcp = tcp; _ble = ble; _board = board; _prefs = prefs;
         _alive = true;
         _wake_at = millis();
     }
+
+    // Two-line message that replaces the page until clearNotice() or the
+    // next page change. Used by main's PRG hold tracker.
+    void showNotice(const char* l1, const char* l2) {
+        if (!_alive) return;
+        strlcpy(_notice1, l1 ? l1 : "", sizeof(_notice1));
+        strlcpy(_notice2, l2 ? l2 : "", sizeof(_notice2));
+        _notice = true;
+        if (!_disp.isOn()) _disp.turnOn();
+        _wake_at = millis();
+        _dirty = true;
+    }
+    void clearNotice() { if (_notice) { _notice = false; _dirty = true; } }
 
     bool alive() const { return _alive; }
 
@@ -73,6 +89,12 @@ public:
             } else {
                 _disp.turnOn();      // wake shows the page you left
             }
+            _wake_at = now;
+            _dirty = true;
+        } else if (ev == BUTTON_EVENT_LONG_PRESS) {
+            // Holds are main's business (see service_hold_gesture); here a
+            // long press only keeps the display awake for the feedback.
+            if (!_disp.isOn()) _disp.turnOn();
             _wake_at = now;
             _dirty = true;
         }
@@ -95,7 +117,8 @@ private:
 
     void draw(uint32_t now) {
         _disp.startFrame();
-        if (_cfg.chan_psk[0] == 0) { drawSetup(); }
+        if (_notice)               { drawNotice(); }
+        else if (_cfg.chan_psk[0] == 0) { drawSetup(); }
         else if (_page == 0)       { drawStatus(); }
         else if (_page == 1)       { drawPeers(now); }
         else                       { drawTunnel(); }
@@ -123,8 +146,23 @@ private:
         _disp.fillRect(0, 10, 128, 1);
     }
 
+    void drawNotice() {
+        drawHeader("PRG");
+        _disp.setCursor(0, 22); _disp.print(_notice1);
+        _disp.setCursor(0, 40); _disp.print(_notice2);
+    }
+
     void drawSetup() {
         drawHeader("SETUP");
+        if (_ble) {
+            // BLE mode with no PSK: WiFi is off, so the only way to the
+            // portal is the ten-second hold.
+            _disp.setCursor(0, 16); _disp.print("Hold PRG 10s:");
+            _disp.setCursor(0, 26); _disp.print("WiFi setup session");
+            _disp.setCursor(0, 40); _disp.print("then http://192.168.4.1/");
+            _disp.setCursor(0, 54); _disp.print("Set channel PSK");
+            return;
+        }
         _disp.setCursor(0, 16); _disp.print("Join WiFi:");
         _disp.setCursor(0, 26); _disp.print(_cfg.ap_ssid);
         _disp.setCursor(0, 40); _disp.print("http://192.168.4.1/");
@@ -135,28 +173,41 @@ private:
         drawHeader(RNS_GW_VARIANT_NAME);
         char line[26];
 
-        bool sta = (WiFi.status() == WL_CONNECTED);
-        if (sta) {
-            snprintf(line, sizeof(line), "\x7F %s", WiFi.SSID().c_str());
-        } else if (_cfg.ap_enabled) {
-            snprintf(line, sizeof(line), "AP %s", _cfg.ap_ssid);
+        if (_ble) {
+            snprintf(line, sizeof(line), "BT %s", _ble->deviceName());
+            _disp.setCursor(0, 14); _disp.print(line);
+            snprintf(line, sizeof(line), "%s", _ble->isStarted() ? "advertising" : "BLE down");
+            _disp.setCursor(0, 24); _disp.print(line);
+            if (_ble->isStarted()) _disp.fillRect(122, 24, 5, 5);
+            else                   _disp.drawRect(122, 24, 5, 5);
+            snprintf(line, sizeof(line), "CLI %d/%d  PEERS %u",
+                     _ble->clientCount(), BLE_IF_MAX_CLIENTS,
+                     _mc ? (unsigned)_mc->peer_count() : 0);
+            _disp.setCursor(0, 34); _disp.print(line);
         } else {
-            snprintf(line, sizeof(line), "\x7F (joining...)");
+            bool sta = (WiFi.status() == WL_CONNECTED);
+            if (sta) {
+                snprintf(line, sizeof(line), "\x7F %s", WiFi.SSID().c_str());
+            } else if (_cfg.ap_enabled) {
+                snprintf(line, sizeof(line), "AP %s", _cfg.ap_ssid);
+            } else {
+                snprintf(line, sizeof(line), "\x7F (joining...)");
+            }
+            _disp.setCursor(0, 14); _disp.print(line);
+
+            IPAddress ip = sta ? WiFi.localIP() : WiFi.softAPIP();
+            snprintf(line, sizeof(line), "%s:%u", ip.toString().c_str(),
+                     (unsigned)_cfg.tcp_port);
+            _disp.setCursor(0, 24); _disp.print(line);
+            bool up = _tcp && _tcp->isStarted();
+            if (up) _disp.fillRect(122, 24, 5, 5);
+            else    _disp.drawRect(122, 24, 5, 5);
+
+            snprintf(line, sizeof(line), "CLI %d/%d  PEERS %u",
+                     _tcp ? _tcp->clientCount() : 0, TCP_IF_MAX_CLIENTS,
+                     _mc ? (unsigned)_mc->peer_count() : 0);
+            _disp.setCursor(0, 34); _disp.print(line);
         }
-        _disp.setCursor(0, 14); _disp.print(line);
-
-        IPAddress ip = sta ? WiFi.localIP() : WiFi.softAPIP();
-        snprintf(line, sizeof(line), "%s:%u", ip.toString().c_str(),
-                 (unsigned)_cfg.tcp_port);
-        _disp.setCursor(0, 24); _disp.print(line);
-        bool up = _tcp && _tcp->isStarted();
-        if (up) _disp.fillRect(122, 24, 5, 5);
-        else    _disp.drawRect(122, 24, 5, 5);
-
-        snprintf(line, sizeof(line), "CLI %d/%d  PEERS %u",
-                 _tcp ? _tcp->clientCount() : 0, TCP_IF_MAX_CLIENTS,
-                 _mc ? (unsigned)_mc->peer_count() : 0);
-        _disp.setCursor(0, 34); _disp.print(line);
 
         snprintf(line, sizeof(line), "%.3f %.1fk SF%d",
                  _prefs ? _prefs->freq : 0.0f,
@@ -207,9 +258,14 @@ private:
                  _mc ? (unsigned)_mc->bind_tx() : 0,
                  _mc ? (unsigned)_mc->bind_rx() : 0);
         _disp.setCursor(0, 34); _disp.print(line);
-        snprintf(line, sizeof(line), "TCPRX %u TCPTX %u",
-                 _tcp ? (unsigned)_tcp->rx_frames() : 0,
-                 _tcp ? (unsigned)_tcp->tx_frames() : 0);
+        if (_ble) {
+            snprintf(line, sizeof(line), "BLERX %u BLETX %u",
+                     (unsigned)_ble->rx_frames(), (unsigned)_ble->tx_frames());
+        } else {
+            snprintf(line, sizeof(line), "TCPRX %u TCPTX %u",
+                     _tcp ? (unsigned)_tcp->rx_frames() : 0,
+                     _tcp ? (unsigned)_tcp->tx_frames() : 0);
+        }
         _disp.setCursor(0, 44); _disp.print(line);
         snprintf(line, sizeof(line), "AIR %uk/h SHED %u",
                  _mc ? (unsigned)(_mc->air_bytes_hour() / 1024) : 0,
@@ -222,8 +278,12 @@ private:
     MomentaryButton&   _btn;
     MeshCoreInterface* _mc = NULL;
     TcpInterface*      _tcp = NULL;
+    BleInterface*      _ble = NULL;
     mesh::MainBoard*   _board = NULL;
     NodePrefs*         _prefs = NULL;
+    bool     _notice = false;
+    char     _notice1[22] = "";
+    char     _notice2[22] = "";
     bool     _alive = false;
     bool     _dirty = true;
     int      _page = 0;
