@@ -931,9 +931,10 @@ WiFi. Columba on Android and iOS, and a Linux box running the
 <a href="https://github.com/torlando-tech/ble-reticulum"><code>ble-reticulum</code></a> package,
 connect to the device as BLE centrals and reach the MeshCore mesh through the
 gateway's Reticulum transport — same tunnel, same multi-hop behaviour, no WiFi.</p>
-<p>Status (2026-09-05): <strong>running on hardware.</strong> Columba Android connects,
-handshakes, and passes Reticulum packets both ways over BLE; the board is
-bound to the mesh at the same time. See <a href="#milestones">Milestones</a>.</p>
+<p>Status (2026-09-05): <strong>running on hardware.</strong> Columba <strong>iOS</strong> connects,
+handshakes, and passes Reticulum packets both ways over BLE, and an LXMF
+message reached the far side of the tunnel; the board is bound to the mesh
+at the same time. Android not yet tested. See <a href="#milestones">Milestones</a>.</p>
 <h2 id="either-wifi-or-ble-never-both">Either WiFi or BLE, never both</h2>
 <p>Client access is a single setting in the portal, <strong>Client access → WiFi / Bluetooth
 LE</strong>. One is active per boot:</p>
@@ -1208,12 +1209,12 @@ to raise upstream. None is worked around silently.</p>
 <tr>
 <td>3.2</td>
 <td>LXMF to a destination on the far side of the tunnel, multiple hops confirmed</td>
-<td>pending</td>
+<td><strong>delivered 2026-09-05</strong> from Columba iOS over BLE; hop count not yet recorded with <code>rnpath</code></td>
 </tr>
 <tr>
 <td>3.3</td>
 <td>Columba Android connects, handshakes, passes traffic</td>
-<td><strong>passed 2026-09-05</strong>: <code>BLERX</code>/<code>BLETX</code> both climbing with the shipping Kotlin backend, no app-side or gateway-side workaround</td>
+<td>pending (Gene will test)</td>
 </tr>
 <tr>
 <td>3.4</td>
@@ -1223,7 +1224,7 @@ to raise upstream. None is worked around silently.</p>
 <tr>
 <td>3.5</td>
 <td>Columba iOS</td>
-<td>pending</td>
+<td><strong>passed 2026-09-05</strong> (out of order — it was the phone on hand): <code>BLERX</code>/<code>BLETX</code> both climbing with the shipping embedded-Python build, an LXMF message delivered across the tunnel, no app-side or gateway-side workaround</td>
 </tr>
 </tbody>
 </table>
