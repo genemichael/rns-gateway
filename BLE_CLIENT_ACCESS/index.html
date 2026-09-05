@@ -313,6 +313,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-ble-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The BLE variant
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#either-wifi-or-ble-never-both" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -813,6 +824,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-ble-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The BLE variant
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#either-wifi-or-ble-never-both" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -935,6 +957,15 @@ gateway's Reticulum transport — same tunnel, same multi-hop behaviour, no WiFi
 handshakes, and passes Reticulum packets both ways over BLE, and an LXMF
 message reached the far side of the tunnel; the board is bound to the mesh
 at the same time. Android not yet tested. See <a href="#milestones">Milestones</a>.</p>
+<h2 id="the-ble-variant">The BLE variant</h2>
+<p><code>heltec_v4_rns_gateway_ble</code> (and <code>tbeam_supreme_rns_gateway_ble</code> on the
+T-Beam Supreme) is the product variant for a device that lives with a phone.
+Same firmware as Stationary and Mobile; its first-boot default is Bluetooth
+client access. Because a Bluetooth device has no portal, it boots into the
+<strong>WiFi setup session</strong> until a channel PSK has been saved: join its AP
+(<code>RNSGateway-BLE</code>, password <code>rnsgateway</code>), set the PSK (and the clock),
+save. From then on it boots in Bluetooth mode with WiFi off. Hold PRG ten
+seconds to get the setup session back.</p>
 <h2 id="either-wifi-or-ble-never-both">Either WiFi or BLE, never both</h2>
 <p>Client access is a single setting in the portal, <strong>Client access → WiFi / Bluetooth
 LE</strong>. One is active per boot:</p>
@@ -1003,20 +1034,16 @@ are dedicated builds that keep WiFi up <strong>only</strong> for the portal:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>heltec_v4_rns_gateway_ble_bringup</code></td>
-<td>tracked, no secrets; boots as AP <code>RNSGateway-BLE</code>, client access defaults to BLE, WiFi kept up for <code>/log</code></td>
-</tr>
-<tr>
-<td><code>heltec_v4_rns_gateway_ble_dbg</code> / <code>_b_ble_dbg</code></td>
-<td>in <code>platformio.local.ini</code>; boards A and B with their usual credentials plus the same two flags</td>
+<td><code>heltec_v4_rns_gateway_*_ble_dbg</code></td>
+<td>in <code>platformio.local.ini</code> only; a board's usual credentials plus <code>-D RNS_GW_BLE_DEBUG_WIFI=1</code> (keep WiFi up in BLE mode) and <code>-D RNS_GW_UDP_LOG_HOST</code> (push log lines over UDP, see below)</td>
 </tr>
 </tbody>
 </table>
-<p>The flags are <code>-D RNS_GW_CLIENT_ACCESS=1</code> (first-boot default = BLE; a stored
-config wins once saved) and <code>-D RNS_GW_BLE_DEBUG_WIFI=1</code> (keep WiFi up in BLE
-mode). The TCP server stays <strong>off</strong> in BLE mode even in these builds, so the
-phone under test still has no path except Bluetooth. <code>RNS_GW_BLE_DEBUG_WIFI</code>
-must never appear in a release env.</p>
+<p>The TCP server stays <strong>off</strong> in BLE mode even in these builds, so the phone
+under test still has no path except Bluetooth. <code>RNS_GW_BLE_DEBUG_WIFI</code> must
+never appear in a tracked env: with both radios up the ESP32 requires WiFi
+modem sleep, under which the station is only half reachable — see the
+bring-up findings.</p>
 <p>The log carries a <code>[mem]</code> line at boot, after Reticulum starts, after the BLE
 stack starts, and every 60 s: internal heap free / largest block / minimum
 ever, and PSRAM free / largest. Those numbers answer the Bluedroid-fit question
