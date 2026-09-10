@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/FIRST_TIME_SETUP/">
       
       
-        <link rel="prev" href="../BLE_CLIENT_ACCESS/">
+        <link rel="prev" href="../CONFIGURATION/">
       
       
         <link rel="next" href="../HALOW_DEPLOYMENT/">
@@ -277,6 +277,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONFIGURATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -417,10 +444,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mobile-only" class="md-nav__link">
+  <a href="#mobile-ble-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mobile only
+        Mobile BLE only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-wifi-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mobile WiFi only
       
     </span>
   </a>
@@ -912,10 +950,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mobile-only" class="md-nav__link">
+  <a href="#mobile-ble-only" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mobile only
+        Mobile BLE only
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-wifi-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mobile WiFi only
       
     </span>
   </a>
@@ -970,7 +1019,8 @@
 
 
 <h1 id="first-time-setup">First-time setup</h1>
-<p>Two variants ship as prebuilt images. They are the same firmware with
+<p>Three variants ship as prebuilt images for two boards (Heltec WiFi LoRa 32
+V4 and LilyGo T-Beam Supreme SX1262). They are the same firmware with
 different first-boot identities, so two gateways in one household never
 collide:</p>
 <table>
@@ -978,7 +1028,8 @@ collide:</p>
 <tr>
 <th></th>
 <th>Stationary</th>
-<th>Mobile</th>
+<th>Mobile WiFi</th>
+<th>Mobile BLE</th>
 </tr>
 </thead>
 <tbody>
@@ -986,38 +1037,46 @@ collide:</p>
 <td>Intended life</td>
 <td>Lives at a site, usually joined to a local network</td>
 <td>Travels; serves clients from its own AP</td>
+<td>Travels with a phone; clients connect over Bluetooth</td>
 </tr>
 <tr>
 <td>Setup AP</td>
 <td><code>RNSGateway-Stationary</code></td>
 <td><code>RNSGateway-Mobile</code></td>
+<td><code>RNSGateway-BLE</code></td>
 </tr>
 <tr>
 <td>Hostname</td>
 <td><code>rnsgateway-stationary.local</code></td>
 <td><code>rnsgateway-mobile.local</code></td>
+<td><code>rnsgateway-ble.local</code> (setup session only)</td>
 </tr>
 <tr>
 <td>Mesh node name</td>
 <td><code>RNS GW Stationary</code></td>
 <td><code>RNS GW Mobile</code></td>
+<td><code>RNS GW BLE</code></td>
 </tr>
 <tr>
 <td>Status</td>
 <td>Released</td>
-<td><strong>Preview — not yet field-validated</strong></td>
+<td><strong>Preview</strong></td>
+<td><strong>Preview</strong> (iOS validated, Android not yet)</td>
 </tr>
 </tbody>
 </table>
+<p>Every setting mentioned below is described in full in the
+<a href="../CONFIGURATION/">Configuration reference</a>. Bluetooth specifics are in
+<a href="../BLE_CLIENT_ACCESS/">Bluetooth LE client access</a>.</p>
 <p>Hardware: Heltec WiFi LoRa 32 <strong>V4</strong> (ESP32-S3 + SX1262). Power from a good
 5 V / 2 A USB supply — WiFi + LoRa transmit spikes brown out weak supplies
 and thin cables, and the failure looks like mystery reboots, not a clean
 error. Treat any attached battery as ride-through backup and verify the
 node actually runs on it for 10+ minutes before trusting it.</p>
 <h2 id="1-flash">1. Flash</h2>
-<p>Download the image for your variant from the releases page and flash it at
-offset <strong>0</strong>:</p>
-<pre><code class="language-bash">esptool.py --chip esp32s3 write_flash 0x0 rns-gateway-stationary-v0.1.0.bin
+<p>Download the image for your variant and board from the releases page and
+flash it at offset <strong>0</strong>:</p>
+<pre><code class="language-bash">esptool.py --chip esp32s3 write_flash 0x0 rns-gateway-stationary-heltec_v4-v0.1.0.bin
 </code></pre>
 <p>(Any ESP32 web flasher works too — single file, offset 0x0.)</p>
 <p>Unplug and repower the board after flashing. Note: on this board, opening
@@ -1025,7 +1084,7 @@ or closing a USB serial connection <strong>reboots it</strong> — that's normal
 <h2 id="2-first-contact-the-setup-ap">2. First contact — the setup AP</h2>
 <p>The gateway boots as a WiFi access point:</p>
 <ol>
-<li>Join the network <code>RNSGateway-Stationary</code> (or <code>-Mobile</code>).
+<li>Join the network <code>RNSGateway-Stationary</code> (or <code>-Mobile</code>, <code>-BLE</code>).
    Password: <code>rnsgateway</code></li>
 <li>A captive portal should open; if not, browse to <code>http://192.168.4.1/</code>.
    Log in as user <code>admin</code>, password <code>password</code>.</li>
@@ -1099,7 +1158,13 @@ both. Notes:</p>
   route around your mesh — everything still works, but the tunnel carries
   nothing and proves nothing.</li>
 </ul>
-<h2 id="mobile-only">Mobile only</h2>
+<h2 id="mobile-ble-only">Mobile BLE only</h2>
+<p>A Bluetooth device has no portal, so it boots into a WiFi setup session
+until a channel PSK is saved. Set the PSK and the clock (Clock section,
+<em>Set clock from this browser</em>), then Save &amp; reboot. From then on it runs
+with WiFi off. To get the portal back, hold PRG for ten seconds and
+release. See <a href="../BLE_CLIENT_ACCESS/">Bluetooth LE client access</a>.</p>
+<h2 id="mobile-wifi-only">Mobile WiFi only</h2>
 <p>Mobile is AP-only by design: its clients join <code>RNSGateway-Mobile</code> and reach
 the portal/TCP server at <code>192.168.4.1</code> (or the hostname). There is nothing
 else to configure beyond channel + radio. Station mode exists in the portal
@@ -1148,6 +1213,10 @@ create exactly the route-around-the-mesh situation described above.</p>
 <tr>
 <td>Node reboots randomly on battery</td>
 <td>It's the power supply, not the software — see the note at the top.</td>
+</tr>
+<tr>
+<td>Bluetooth device, need the portal</td>
+<td>Hold PRG 10 s, release. Releasing between 5 and 10 s powers it off instead.</td>
 </tr>
 <tr>
 <td>Portal password forgotten</td>

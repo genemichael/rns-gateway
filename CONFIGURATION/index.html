@@ -1,0 +1,1892 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the open source MeshCore firmware">
+      
+      
+      
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/CONFIGURATION/">
+      
+      
+        <link rel="prev" href="../BLE_CLIENT_ACCESS/">
+      
+      
+        <link rel="next" href="../FIRST_TIME_SETUP/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Configuration reference - MeshCore Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../_stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MeshCore Docs" class="md-header__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MeshCore Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MeshCore Docs" class="md-nav__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    MeshCore Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BLE_CLIENT_ACCESS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bluetooth LE client access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-settings-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where settings live
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaching-the-portal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaching the portal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-by-portal-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings by portal section
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Settings by portal section">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#client-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-station" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WiFi station
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rns-tcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RNS TCP server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mdns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mDNS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meshcore-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeshCore node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meshcore-bridge-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeshCore bridge channel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tunnel policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#portal-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Portal access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lora-radio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LoRa radio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-prg-button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The PRG button
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oled-status-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OLED status screen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variant-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variant defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#copyable-checklist-for-a-new-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copyable checklist for a new site
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIRST_TIME_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First-time setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HALOW_DEPLOYMENT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HaLow deployment for the RNS Gateway
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../companion_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kiss_modem_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MeshCore KISS Modem Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nrf52_power_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nRF52 Power Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../number_allocations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Number Allocations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../packet_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packet Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payload Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qr_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stats_binary_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stats Binary Frame Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal_chat_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal Chat CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-settings-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where settings live
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaching-the-portal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaching the portal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-by-portal-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings by portal section
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Settings by portal section">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#client-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-station" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WiFi station
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rns-tcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RNS TCP server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mdns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mDNS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meshcore-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeshCore node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meshcore-bridge-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeshCore bridge channel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tunnel policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#portal-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Portal access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lora-radio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LoRa radio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-prg-button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The PRG button
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oled-status-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OLED status screen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variant-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variant defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#copyable-checklist-for-a-new-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copyable checklist for a new site
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/CONFIGURATION.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="configuration-reference">Configuration reference</h1>
+<p>Every user-facing setting of the RNS Gateway firmware, what it does, its
+default, and where it is stored. Read <a href="../FIRST_TIME_SETUP/">First-time setup</a>
+first if the device is new; this page is the reference you come back to.</p>
+<p>Applies to all release variants on both boards (Heltec WiFi LoRa 32 V4 and
+LilyGo T-Beam Supreme SX1262): Stationary, Mobile WiFi, Mobile BLE, and the
+prop-restricted builds. The firmware is identical; variants differ only in
+first-boot defaults, which are listed at the end.</p>
+<blockquote>
+<p><strong>The tunnel only connects between gateways on the same MeshCore
+channel.</strong> Every site you want to reach must have the identical channel
+name and PSK entered in its own gateway's <em>MeshCore bridge channel</em>
+section. Radio parameters must match too. A gateway on a different
+channel is invisible, with no error on either side.</p>
+</blockquote>
+<h2 id="where-settings-live">Where settings live</h2>
+<p>There is no serial configuration step. Everything is set in the <strong>web
+portal</strong> and stored on the device's flash filesystem, where it survives
+reflashes (the filesystem is a separate partition from the firmware).</p>
+<table>
+<thead>
+<tr>
+<th>Store</th>
+<th>File</th>
+<th>Holds</th>
+<th>Cleared by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gateway config</td>
+<td><code>/rns_gateway.json</code></td>
+<td>Everything in this document except the node name, radio and clock</td>
+<td>Portal <strong>Factory reset</strong></td>
+</tr>
+<tr>
+<td>MeshCore prefs</td>
+<td><code>/prefs.json</code></td>
+<td>Node name, LoRa radio parameters</td>
+<td>MeshCore <code>erase</code> CLI, or a full flash erase</td>
+</tr>
+<tr>
+<td>Reticulum identity</td>
+<td><code>/transport_identity</code> and friends</td>
+<td>The gateway's Reticulum transport identity</td>
+<td>Full flash erase only</td>
+</tr>
+</tbody>
+</table>
+<p>Two consequences worth knowing:</p>
+<ul>
+<li><strong>Reflashing does not reset the device.</strong> Passwords, channel PSK, radio
+  parameters and client-access mode all persist across a firmware update.
+  To return to shipped defaults, use Factory reset in the portal, or erase
+  the whole flash with <code>esptool.py erase_flash</code> before reflashing.</li>
+<li><strong>A corrupt or missing config never bricks the device.</strong> If the file is
+  unreadable the firmware logs it and boots on the variant's defaults with
+  the setup access point up, so the portal is always reachable.</li>
+</ul>
+<p>Stored values always win over the build-time defaults. The defaults only
+apply until the first save.</p>
+<h2 id="reaching-the-portal">Reaching the portal</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Address</th>
+<th>Login</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On the device's own access point</td>
+<td><code>http://192.168.4.1/</code> (captive portal should open automatically)</td>
+<td>user <code>admin</code>, portal password</td>
+</tr>
+<tr>
+<td>On a network the device has joined</td>
+<td><code>http://&lt;hostname&gt;.local/</code> or the device's IP</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Bluetooth mode</td>
+<td>No portal. Hold PRG 10 s and release for a one-off WiFi setup session, then as above</td>
+<td>same</td>
+</tr>
+</tbody>
+</table>
+<p>The portal password ships as <code>password</code>. Change it on first login.</p>
+<p>The portal has one form. <strong>Save &amp; reboot</strong> writes every section at once and
+restarts the device; the only exception is the Clock, which has its own
+button and applies immediately without a reboot.</p>
+<h2 id="settings-by-portal-section">Settings by portal section</h2>
+<h3 id="client-access">Client access</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Values</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Radio clients connect over</td>
+<td>WiFi / Bluetooth LE</td>
+<td>WiFi (Mobile BLE variant: Bluetooth LE)</td>
+<td>One mode per boot, never both</td>
+</tr>
+</tbody>
+</table>
+<p><strong>WiFi</strong> runs the access point and station described below plus the RNS
+TCP server. <strong>Bluetooth LE</strong> runs a <code>ble-reticulum</code> peripheral for Columba
+(Android and iOS) and Linux clients; the WiFi radio is never started, so the
+portal is unreachable until you hold PRG for a setup session. The device
+advertises as <code>RNS-</code> followed by eight hex characters derived from its
+identity. No pairing is needed.</p>
+<p>A Bluetooth-mode device with <strong>no channel PSK saved</strong> boots into the WiFi
+setup session on its own, every boot, until it has one. Details and the
+reasoning are in <a href="../BLE_CLIENT_ACCESS/">Bluetooth LE client access</a>.</p>
+<h3 id="wifi-station">WiFi station</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Join an existing network</td>
+<td>off</td>
+<td>Stationary use: join the site network so clients on that network reach the gateway</td>
+</tr>
+<tr>
+<td>SSID</td>
+<td>empty</td>
+<td>up to 32 characters</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>empty</td>
+<td>up to 64 characters</td>
+</tr>
+</tbody>
+</table>
+<p>When a station is joined, the clock is set from NTP automatically and the
+portal reports the station's DHCP address. The device keeps retrying the
+network every 10 seconds if it drops.</p>
+<p>Do not join two mesh-linked gateways to networks that can reach each other.
+Reticulum will route between them over IP instead of the mesh. Everything
+still works, but the tunnel carries nothing.</p>
+<h3 id="access-point">Access point</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Host an access point</td>
+<td>on</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AP SSID</td>
+<td>variant name, see below</td>
+<td>up to 32 chars</td>
+<td></td>
+</tr>
+<tr>
+<td>AP password</td>
+<td><code>rnsgateway</code></td>
+<td>up to 64 chars, blank = open</td>
+<td>Change it</td>
+</tr>
+<tr>
+<td>AP channel</td>
+<td>1</td>
+<td>1 to 13</td>
+<td>Only used when no station is joined</td>
+</tr>
+</tbody>
+</table>
+<p>The ESP32 has one WiFi radio. Once the station joins a network, the AP
+moves to that network's channel and drops its clients while doing so. If
+every client is on the site network, the cleanest setup is station on, AP
+off.</p>
+<p>The AP is raised regardless of this checkbox in two cases, so the portal
+can always be reached: during a setup session, and whenever neither station
+nor AP is enabled.</p>
+<h3 id="rns-tcp-server">RNS TCP server</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accept Reticulum clients</td>
+<td>on</td>
+<td></td>
+</tr>
+<tr>
+<td>Listen port</td>
+<td>4242</td>
+<td>1 to 65535</td>
+</tr>
+</tbody>
+</table>
+<p>This is what client apps connect to as a <code>TCPClientInterface</code>. The portal's
+top section prints a ready-made config stanza with the current hostname and
+port. Limits: <strong>4 simultaneous clients</strong>; a client that sends nothing for
+<strong>10 minutes</strong> is dropped and must reconnect, which healthy apps do on their
+own. The server is always off in Bluetooth mode.</p>
+<h3 id="mdns">mDNS</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Advertise over mDNS</td>
+<td>on</td>
+<td></td>
+</tr>
+<tr>
+<td>Hostname (without .local)</td>
+<td>variant hostname, see below</td>
+<td>up to 30 chars</td>
+</tr>
+</tbody>
+</table>
+<p>Gives clients a stable <code>&lt;hostname&gt;.local</code> name instead of a DHCP address.
+Needs multicast to pass between the client and the gateway; some routers
+and most guest networks block it. Fall back to the IP if the name does not
+resolve.</p>
+<h3 id="meshcore-node">MeshCore node</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node name</td>
+<td><code>RNS GW Stationary</code>, <code>RNS GW Mobile</code> or <code>RNS GW BLE</code> plus a unique suffix</td>
+<td>up to 31 chars, stored in MeshCore prefs</td>
+</tr>
+</tbody>
+</table>
+<p>This is the name other MeshCore users see in their contact list. A device
+still carrying the build default gets a suffix derived from its identity so
+two gateways never show the same name. Give it a name of your own.</p>
+<h3 id="meshcore-bridge-channel">MeshCore bridge channel</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Channel name</td>
+<td><code>RNSTesting</code></td>
+<td>up to 30 chars</td>
+</tr>
+<tr>
+<td>Channel PSK (base64)</td>
+<td>empty</td>
+<td>base64 of a 16- or 32-byte key</td>
+</tr>
+</tbody>
+</table>
+<p>The gateway bridges nothing until a PSK is saved. Create a <strong>private</strong>
+channel in the MeshCore app, dedicated to the tunnel, and paste its key
+here.</p>
+<p><strong>Recipients must be on the same channel.</strong> The tunnel is carried as
+messages on this channel, so a Reticulum client can only reach clients
+behind gateways that have the identical channel name and PSK. Share the
+channel with every site you intend to talk to, and with nobody else.
+Channels match by PSK hash, not by slot index, so the channel can sit in a
+different slot on each device. The public channel cannot be used.</p>
+<h3 id="tunnel-policy">Tunnel policy</h3>
+<p>These control how much of the shared LoRa airtime the tunnel may consume.
+The defaults are tuned for a roughly 300 bit/s mesh and should be left
+alone unless you understand the cost.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Range</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Path-request throttle, seconds per destination</td>
+<td>1800</td>
+<td>0 to 86400</td>
+<td>Minimum interval between path requests for the same destination. 0 disables the throttle, which lets a freshly booted client storm hundreds of requests onto the channel. Bring-up only.</td>
+</tr>
+<tr>
+<td>Announce throttle, seconds per destination</td>
+<td>600</td>
+<td>0 to 86400</td>
+<td>Minimum interval between rebroadcasts of the same destination's announce. Lower it to reconverge faster after reboots, at the cost of airtime.</td>
+</tr>
+<tr>
+<td>Route tunnel via mesh repeaters (flood)</td>
+<td>off</td>
+<td></td>
+<td>Off means zero-hop: repeaters do not re-flood tunnel traffic. Leave it off whenever the peer gateway is in direct radio range. On makes every repeater in the region retransmit tunnel traffic.</td>
+</tr>
+<tr>
+<td>Airtime budget, KB per hour</td>
+<td>60</td>
+<td>0 to 200</td>
+<td>Rolling one-hour cap on bytes the tunnel puts on the air. 0 is unlimited.</td>
+</tr>
+<tr>
+<td>Prop destination hashes</td>
+<td>empty</td>
+<td>up to 4 hashes, 32 hex chars each, comma-separated</td>
+<td>Whitelist for the prop-restricted builds. Other builds store and ignore it.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the airtime budget sheds.</strong> Above 80% of the budget the gateway stops
+sending announces and path requests, since those are recoverable on demand.
+At 100% it stops sending everything until the rolling window frees space.
+Shed events are counted and logged. The default of 60 KB is about 45% of
+what the link could theoretically carry in an hour, leaving room for
+MeshCore's own users.</p>
+<p><strong>Prop-restricted builds</strong> (<code>…_stationary_prop</code>, <code>…_mobile_wifi_prop</code>)
+carry only traffic addressed to the listed LXMF propagation-node
+destinations, plus links established with them. Announces and path
+requests still pass. With an empty list these builds block all link and
+data traffic onto the mesh, so fill in the whitelist before relying on one.
+Learned paths are RAM-only by design, so a gateway reconverges on its own
+after a reboot; first contact with a destination can take up to a minute.</p>
+<h3 id="portal-access">Portal access</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New portal password</td>
+<td><code>password</code></td>
+<td>up to 32 chars, blank keeps the current one</td>
+</tr>
+</tbody>
+</table>
+<p>Login user is always <code>admin</code>. The password protects the portal, the <code>/log</code>
+and <code>/lastlog</code> pages, and Factory reset.</p>
+<h3 id="lora-radio">LoRa radio</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frequency (MHz)</td>
+<td>910.525</td>
+<td></td>
+</tr>
+<tr>
+<td>Bandwidth (kHz)</td>
+<td>62.5</td>
+<td></td>
+</tr>
+<tr>
+<td>SF</td>
+<td>7</td>
+<td>5 to 12</td>
+</tr>
+<tr>
+<td>CR</td>
+<td>5</td>
+<td>5 to 8</td>
+</tr>
+<tr>
+<td>TX dBm</td>
+<td>board default</td>
+<td>0 to 30</td>
+</tr>
+</tbody>
+</table>
+<p>Stored in MeshCore prefs, and applied through MeshCore's own <code>set radio</code>
+path so there is one source of truth. Values must match the target mesh
+<strong>exactly</strong>. This is a silent failure: with wrong parameters nothing
+errors, the node simply never hears the mesh. If two gateways cannot see
+each other, compare these on both, character by character, before anything
+else. The defaults are the US regional MeshCore parameters.</p>
+<h3 id="clock">Clock</h3>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Set clock from this browser</td>
+<td>Sends the browser's current time to the device. Applies immediately, no reboot.</td>
+</tr>
+</tbody>
+</table>
+<p>MeshCore stamps every packet with this clock. With a station joined it is
+set from NTP automatically. A Bluetooth-mode device has no network, so set
+it here during the setup session, or from GPS on a board that has one. The
+page shows the device's current time, or "NOT SET" if it is still counting
+from boot.</p>
+<h3 id="factory-reset">Factory reset</h3>
+<p>Erases <code>/rns_gateway.json</code> and reboots on the variant's defaults: shipped
+AP name and password, portal password <code>password</code>, no station, no channel
+PSK, WiFi client access. The node name, radio parameters and Reticulum
+identity are <strong>not</strong> touched.</p>
+<h2 id="the-prg-button">The PRG button</h2>
+<p>All gestures act on <strong>release</strong>, because PRG is the boot-strapping pin and
+resetting while it is held drops into the serial bootloader.</p>
+<table>
+<thead>
+<tr>
+<th>Hold</th>
+<th>On release</th>
+<th>Feedback while holding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Short press</td>
+<td>Advances the OLED page, if a display is fitted</td>
+<td></td>
+</tr>
+<tr>
+<td>5 to 10 s</td>
+<td><strong>Powers off</strong> (deep sleep). Press RST or power-cycle to start again</td>
+<td>TX LED solid from 5 s; OLED says "Release: POWER OFF"</td>
+</tr>
+<tr>
+<td>10 s or more</td>
+<td>Reboots into a one-off <strong>WiFi setup session</strong> with stored settings untouched</td>
+<td>TX LED blinks from 10 s</td>
+</tr>
+</tbody>
+</table>
+<p>The setup session brings up the AP and portal for one boot only. The
+request lives in RTC memory, so it survives the software reset but not a
+power cycle. It is the way back to the portal from Bluetooth mode, and it
+also works in WiFi mode if the AP or station settings were saved wrong.
+Before rebooting, the firmware saves its log ring to flash so the setup
+session's <code>/lastlog</code> page shows what happened before the button was held.</p>
+<h2 id="oled-status-screen">OLED status screen</h2>
+<p>On boards with a display fitted, a short PRG press cycles through:</p>
+<ol>
+<li><strong>STATUS</strong>: variant name, address and port with TCP state (or the BLE
+   name and advertising state), client and peer counts, radio parameters,
+   tunnel TX/RX.</li>
+<li><strong>PEERS</strong>: bound peer gateways with name, capability flag and how long
+   since each was last heard.</li>
+<li><strong>TUNNEL</strong>: direct versus fallback sends, announce drops, queue depth,
+   routes, bind counts, routing mode (0HOP or FLOOD), free heap.</li>
+<li><strong>BLE</strong> (Bluetooth mode only): connected centrals, negotiated MTU,
+   packet and fragment counters each way, and every drop cause.</li>
+</ol>
+<p>While no channel PSK is configured a <strong>SETUP</strong> page replaces these and
+shows the AP to join, or the PRG hold to perform. The display blanks after
+60 seconds; any PRG press wakes it. A display is optional; the firmware
+runs the same without one.</p>
+<h2 id="logs">Logs</h2>
+<p>Opening or closing USB serial <strong>reboots this board</strong> (native USB CDC), so
+do not diagnose over the serial port. Instead:</p>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/log</code></td>
+<td>The live log ring (kept in PSRAM), same login as the portal</td>
+</tr>
+<tr>
+<td><code>/lastlog</code></td>
+<td>The log saved to flash just before a PRG-triggered reboot into a setup session</td>
+</tr>
+</tbody>
+</table>
+<p>The boot log prints the <strong>active</strong> radio parameters as loaded from prefs.
+Trust that line over anything in a build file, since a <code>/prefs.json</code> left
+behind by earlier firmware survives a reflash and correctly wins.</p>
+<h2 id="variant-defaults">Variant defaults</h2>
+<p>Same firmware, different first-boot identity, so two gateways in one
+household never collide on SSID or hostname. Image names follow
+<code>rns-gateway-&lt;variant&gt;-&lt;board&gt;-vX.Y.Z.bin</code>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Stationary</th>
+<th>Mobile WiFi</th>
+<th>Mobile BLE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intended life</td>
+<td>Lives at a site, joined to the local network</td>
+<td>Travels; phones join its AP</td>
+<td>Travels with a phone over Bluetooth</td>
+</tr>
+<tr>
+<td>Client access</td>
+<td>WiFi</td>
+<td>WiFi</td>
+<td>Bluetooth LE</td>
+</tr>
+<tr>
+<td>AP SSID</td>
+<td><code>RNSGateway-Stationary</code></td>
+<td><code>RNSGateway-Mobile</code></td>
+<td><code>RNSGateway-BLE</code> (setup session only)</td>
+</tr>
+<tr>
+<td>AP password</td>
+<td><code>rnsgateway</code></td>
+<td><code>rnsgateway</code></td>
+<td><code>rnsgateway</code></td>
+</tr>
+<tr>
+<td>Hostname</td>
+<td><code>rnsgateway-stationary</code></td>
+<td><code>rnsgateway-mobile</code></td>
+<td><code>rnsgateway-ble</code></td>
+</tr>
+<tr>
+<td>Mesh node name</td>
+<td><code>RNS GW Stationary</code></td>
+<td><code>RNS GW Mobile</code></td>
+<td><code>RNS GW BLE</code></td>
+</tr>
+<tr>
+<td>Boards</td>
+<td><code>heltec_v4</code>, <code>tbeam_supreme</code></td>
+<td><code>heltec_v4</code>, <code>tbeam_supreme</code></td>
+<td><code>heltec_v4</code>, <code>tbeam_supreme</code></td>
+</tr>
+<tr>
+<td>Prop-restricted build</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else is identical across variants: portal user <code>admin</code>, portal
+password <code>password</code>, TCP port 4242, no station credentials, no channel PSK,
+US radio defaults, and the tunnel policy defaults above.</p>
+<h2 id="copyable-checklist-for-a-new-site">Copyable checklist for a new site</h2>
+<ol>
+<li>Flash, power-cycle, join the setup AP, open <code>http://192.168.4.1/</code>.</li>
+<li>Change the AP password and the portal password.</li>
+<li>Paste the private channel name and PSK. Use the same channel on every
+   gateway you want to reach.</li>
+<li>Confirm the radio parameters match your mesh.</li>
+<li>Rename the node.</li>
+<li>Stationary only: enter the site network credentials.</li>
+<li>Mobile BLE only: set the clock from the browser, then switch Client
+   access to Bluetooth LE if it is not already.</li>
+<li>Save &amp; reboot, then check <code>/log</code> for the active radio line and the
+   <code>RNSBIND</code> exchange with the peer gateway.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.action.edit", "content.code.copy", "search.highlight", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
